@@ -298,17 +298,18 @@ namespace smart_system
 		string file_name;
 		//friend void operator<<(ostream& out, FileSystem&);
 	public:
+		bool checkDevice(DeviceVariant& device);
 		void readF();
 		void writeF(const DeviceVariant& device);
 		void editF(const DeviceVariant& device);
-		void searchF(const User& user, const string& dev_name);
-		void filterByOnline(const User& user, bool online);
-		void filterByDate(const User& user, const Date& first_date, const Date& second_date);
+		void searchF(const string& dev_name);
+		void filterByOnline(bool online);
+		void filterByDate(const Date& first_date, const Date& second_date);
 		void removeF(const DeviceVariant& device);
+		void sortF();
 		FileSystem();
 		void setFileName(const string& file_name);
 		~FileSystem() = default;
-
 		string getFileName() const;
 
 	};
@@ -320,7 +321,7 @@ namespace smart_system
 		string file_name;
 	/*	friend void operator<<(ostream& out, FileSystem&);*/
 	public:
-		bool isUserExisting(User& user_to_check);
+		short checkUser(User& user_to_check);
 		void readF(const User& user);
 		void readF(UserRole role, const User& user);
 		void writeF(const User& user);
@@ -352,34 +353,11 @@ namespace smart_system
 
 	};
 
-	class SmartHome
+	static class SmartHomeInteraction final
 	{
-		shared_ptr<User> current_user;
-		std::queue<DeviceScriptVariant> subsequence;
-	public:
-		FileSystem<DeviceVariant> device_file;
-		FileSystem<DeviceScriptVariant> script_file;
-		FileSystem<User> user_file;
-		void setCurrentUser(shared_ptr<User> user);
-		shared_ptr<User> getCurrentUser() const;
-		bool hasUser() const;
-		/*void addDevice();
-		void deleteDevice();
-		void editDevice();
-		void makeMyScript();
-		void sortDevicesByName();
-		void searchDevicesByName();
-		void filterDevices();
-		void printDevices();
-		*/
-		SmartHome();
-		~SmartHome() = default;
-	};
-
-	static class MenuInteraction final
-	{
-		static SmartHome smart_home;
 		/*		void setFormat(); */// setf флаги формат.
+		static shared_ptr<User> current_user;
+		static std::queue<DeviceScriptVariant> script_subsequence;
 		static DeviceVariant chooseDevice();
 		static void showUserMenu();
 		static void showAdminMenu();
@@ -391,10 +369,13 @@ namespace smart_system
 		static void showRoleHeaderMenu();
 		static void showRegistrationMenu();
 		static void showLoginMenu();
-	
+		static FileSystem<DeviceVariant> device_file;
+		static FileSystem<DeviceScriptVariant> script_file;
+		static FileSystem<User> user_file;
+		static bool hasUser();
 	public:
-		~MenuInteraction() = default;
-		MenuInteraction() = default; 
+		~SmartHomeInteraction() = default;
+		SmartHomeInteraction() = default; 
 		static void showEntryMenu();
 	};
 }

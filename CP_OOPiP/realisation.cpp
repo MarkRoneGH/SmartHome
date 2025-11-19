@@ -481,7 +481,8 @@
 
 		string User::hashPassword(const string& password)
 		{
-			return "salted_" + password + "_" + std::to_string(password.size() * 12345);
+			return string(user_name) + password + "_" + std::to_string(password.size() * 12345);
+			/*return "salted_" + password + "_" + std::to_string(password.size() * 12345);*/
 		}
 
 		void User::setRole(const UserRole& role) { anyRole = role; }
@@ -1129,6 +1130,15 @@
 			return out;
 		}
 
+		inline bool operator==(const DeviceVariant& lhs, const DeviceVariant& rhs) {
+			return std::visit([](const auto& device1, const auto& device2) -> bool
+				{
+				if (typeid(device1) != typeid(device2))
+					return false;
+				return device1 == device2;
+				}, lhs, rhs);
+		}
+
 		//DeviceScript
 
 		template<smartDeviceType T>
@@ -1292,7 +1302,7 @@
 			file_name = "users_storage.dat";
 		}
 
-		bool FileSystem<User>::isUserExisting(User& user_to_check)
+		short FileSystem<User>::checkUser(User& user_to_check)
 		{
 			smartFile.open(file_name, std::ios::in | std::ios::binary);
 
@@ -1319,17 +1329,27 @@
 				cout << temp_user;
 				if (user_to_check.getUserDate() != Date() && user_to_check.getLocation() != UserLocation())
 				{
-					if (temp_user == user_to_check)
+					if (temp_user.getUserName() == user_to_check.getUserName())
 					{
-						smartFile.close();
-						return true;
+						if (temp_user == user_to_check)
+						{
+							smartFile.close();
+							return 1;
+						}
+						else
+						{
+							smartFile.close();
+							return 2;
+
+						}
 					}
+					
 				}
-				else if (temp_user.getPassword() == user_to_check.getPassword() && temp_user.getUserName() == user_to_check.getUserName()) 
+				else if (temp_user.getPassword() == user_to_check.getPassword() && temp_user.getUserName() == user_to_check.getUserName() && temp_user.getRole() == user_to_check.getRole())
 				{
 					user_to_check = temp_user;
 					smartFile.close();
-					return true;
+					return 1;
 				}
 			}
 
@@ -1339,7 +1359,7 @@
 			}
 
 			smartFile.close();
-			return false;
+			return 0;
 		}
 
 		void FileSystem<User>::writeF(const User& user)
@@ -1362,6 +1382,87 @@
 		}
 
 		//FileSystem<DeviceVariant>
+
+		void FileSystem<DeviceVariant>::sortF()
+		{
+			fstream file(file_name, ios::in | ios::out | ios::binary);
+			if (!file.is_open()) {
+				cout << "Файл устройств не найден\n";
+				return;
+			}
+
+			vector<DeviceVariant> devices;
+			DeviceVariant device;
+
+
+			while (file >> device) {
+				devices.push_back(device);
+			}
+
+			if (devices.empty()) {
+				cout << "Файл устройств пуст\n";
+				file.close();
+				return;
+			}
+
+			std::sort(devices.begin(), devices.end(),
+				[](const DeviceVariant& a, const DeviceVariant& b) -> bool {
+					return std::visit([](const auto& dev_a, const auto& dev_b) -> bool {
+						string title_a = dev_a.getTitle();
+						string title_b = dev_b.getTitle();
+
+						std::transform(title_a.begin(), title_a.end(), title_a.begin(), ::tolower);
+						std::transform(title_b.begin(), title_b.end(), title_b.begin(), ::tolower);
+
+						return title_a < title_b;
+						}, a, b);
+				});
+
+			file.close();
+			file.open(file_name, ios::out | ios::trunc | ios::binary);
+
+			if (!file.is_open()) {
+				cout << "Ошибка при открытии файла для записи\n";
+				return;
+			}
+
+			for (const auto& dev : devices) {
+				file << dev;
+			}
+
+			file.close();
+			cout << "Устройства отсортированы по названию\n";
+		}
+
+		bool FileSystem<DeviceVariant>::checkDevice(DeviceVariant& device)
+		{
+			smartFile.open(file_name, std::ios::in | std::ios::binary);
+
+			if (!smartFile.is_open())
+				return false;
+
+
+			smartFile.seekg(0, std::ios::end);
+			if (smartFile.tellg() == 0) {
+				smartFile.close();
+				return false;
+			}
+			smartFile.seekg(0, std::ios::beg);
+
+			DeviceVariant temp_device;
+			bool found = false;
+
+				while (smartFile >> temp_device)
+				{
+					if (temp_device == device) {
+						found = true;
+						break;
+					}
+				}
+
+			smartFile.close();
+			return found;
+		}
 
 		void FileSystem<DeviceVariant>::readF()
 		{
@@ -1459,78 +1560,37 @@
 			smartFile.close();
 		}
 
-		void FileSystem<DeviceVariant>::searchF(const User& user, const string& dev_name)
+		void FileSystem<DeviceVariant>::searchF(const string& dev_name)
 		{
-			smartFile.open(file_name, ios::in | ios::binary);
-			if (!smartFile.is_open()) {
+			std::ifstream file(file_name, ios::binary);
+			if (!file.is_open()) {
 				cout << "Файл устройств не найден\n";
 				return;
 			}
 
 			cout << "=== Результаты поиска: '" << dev_name << "' ===\n";
 			int found_count = 0;
+			DeviceVariant device;
 
-			while (!smartFile.eof()) {
-				bool device_checked = false;
+			while (file >> device) {
+				std::visit([&](const auto& dev) {
+						string title = dev.getTitle();
 
-				SmartLight light;
-				streampos pos = smartFile.tellg();
-				smartFile >> light;
-				if (smartFile.good() && light.getPassword() == user.getPassword()) {
-					if (light.getTitle().find(dev_name) != string::npos) {
-						cout << "Найденное устройство " << ++found_count << ":\n";
-						cout << light;
-						cout << "------------------------\n";
-					}
-					device_checked = true;
-				}
-
-				if (!device_checked) {
-					smartFile.clear();
-					smartFile.seekg(pos);
-					Thermostat thermo;
-					smartFile >> thermo;
-					if (smartFile.good() && thermo.getPassword() == user.getPassword()) {
-						if (thermo.getTitle().find(dev_name) != string::npos) {
+						if (title.find(dev_name) != string::npos) {
 							cout << "Найденное устройство " << ++found_count << ":\n";
-							cout << thermo;
+							cout << dev;
 							cout << "------------------------\n";
 						}
-						device_checked = true;
 					}
-				}
-
-				if (!device_checked) {
-					smartFile.clear();
-					smartFile.seekg(pos);
-					SecurityCamera camera;
-					smartFile >> camera;
-					if (smartFile.good() && camera.getPassword() == user.getPassword()) {
-						if (camera.getTitle().find(dev_name) != string::npos) {
-							cout << "Найденное устройство " << ++found_count << ":\n";
-							cout << camera;
-							cout << "------------------------\n";
-						}
-						device_checked = true;
-					}
-				}
-
-				if (!device_checked) {
-					smartFile.clear();
-					smartFile.ignore(1024, '\n');
-				}
-
-				if (smartFile.eof()) break;
+					, device);
 			}
 
 			if (found_count == 0) {
 				cout << "Устройства не найдены\n";
 			}
-
-			smartFile.close();
 		}
 
-		void FileSystem<DeviceVariant>::filterByOnline(const User& user, bool online)
+		void FileSystem<DeviceVariant>::filterByOnline(bool online)
 		{
 			smartFile.open(file_name, ios::in | ios::binary);
 			if (!smartFile.is_open()) {
@@ -1540,58 +1600,17 @@
 
 			cout << "=== Устройства в статусе: " << (online ? "онлайн" : "офлайн") << " ===\n";
 			int filtered_count = 0;
+			DeviceVariant device;
 
-			while (!smartFile.eof()) {
-				bool device_checked = false;
+			while (smartFile >> device) {
+				bool is_online = std::visit([](const auto& dev) -> bool {
+					return dev.getOnline();
+					}, device);
 
-				SmartLight light;
-				streampos pos = smartFile.tellg();
-				smartFile >> light;
-				if (smartFile.good() && light.getPassword() == user.getPassword()) {
-					if (light.getOnline() == online) {
-						cout << "Устройство " << ++filtered_count << ":\n";
-						cout << light;
-						cout << "------------------------\n";
-					}
-					device_checked = true;
+				if (online == is_online) {
+					cout << device << "\n"; 
+					filtered_count++;
 				}
-
-				if (!device_checked) {
-					smartFile.clear();
-					smartFile.seekg(pos);
-					Thermostat thermo;
-					smartFile >> thermo;
-					if (smartFile.good() && thermo.getPassword() == user.getPassword()) {
-						if (thermo.getOnline() == online) {
-							cout << "Устройство " << ++filtered_count << ":\n";
-							cout << thermo;
-							cout << "------------------------\n";
-						}
-						device_checked = true;
-					}
-				}
-
-				if (!device_checked) {
-					smartFile.clear();
-					smartFile.seekg(pos);
-					SecurityCamera camera;
-					smartFile >> camera;
-					if (smartFile.good() && camera.getPassword() == user.getPassword()) {
-						if (camera.getOnline() == online) {
-							cout << "Устройство " << ++filtered_count << ":\n";
-							cout << camera;
-							cout << "------------------------\n";
-						}
-						device_checked = true;
-					}
-				}
-
-				if (!device_checked) {
-					smartFile.clear();
-					smartFile.ignore(1024, '\n');
-				}
-
-				if (smartFile.eof()) break;
 			}
 
 			if (filtered_count == 0) {
@@ -1601,30 +1620,30 @@
 			smartFile.close();
 		}
 
-		void FileSystem<DeviceVariant>::filterByDate(const User& user, const Date& first_date, const Date& second_date)
+		void FileSystem<DeviceVariant>::filterByDate(const Date& first_date, const Date& second_date)
 		{
-			smartFile.open(file_name, ios::in | ios::binary);
-			if (!smartFile.is_open()) {
+			std::ifstream file(file_name, ios::binary);
+			if (!file.is_open()) {
 				cout << "Файл устройств не найден\n";
 				return;
 			}
 
-			smartFile.seekg(0, ios::end);
-			if (smartFile.tellg() == 0) {
+			// Проверка на пустой файл
+			file.seekg(0, ios::end);
+			if (file.tellg() == 0) {
 				cout << "Файл устройств пуст\n";
-				smartFile.close();
 				return;
 			}
-			smartFile.seekg(0, ios::beg);
+			file.seekg(0, ios::beg);
 
 			cout << "=== Устройства купленные в период с " << first_date << " по " << second_date << " ===\n";
 			int filtered_count = 0;
 
+	
 			auto isDateInRange = [&](const Date& date) -> bool {
 
-				if (date.getYear() < first_date.getYear() || date.getYear() > second_date.getYear()) {
-					return false;
-				}
+				if (date.getYear() < first_date.getYear()) return false;
+				if (date.getYear() > second_date.getYear()) return false;
 
 				if (date.getYear() == first_date.getYear()) {
 					if (date.getMonth() < first_date.getMonth()) return false;
@@ -1639,64 +1658,18 @@
 				return true;
 				};
 
-			while (!smartFile.eof()) {
-				bool device_checked = false;
+			DeviceVariant device;
 
-
-				SmartLight light;
-				streampos pos = smartFile.tellg();
-				smartFile >> light;
-				if (smartFile.good() && light.getPassword() == user.getPassword()) {
-					Date purchase_date = light.getPurchaseDate();
-					if (isDateInRange(purchase_date)) {
-						cout << "Устройство " << ++filtered_count << ":\n";
-						cout << light;
-						cout << "------------------------\n";
-					}
-					device_checked = true;
-				}
-
-	
-				if (!device_checked) {
-					smartFile.clear();
-					smartFile.seekg(pos);
-					Thermostat thermo;
-					smartFile >> thermo;
-					if (smartFile.good() && thermo.getPassword() == user.getPassword()) {
-						Date purchase_date = thermo.getPurchaseDate();
+			while (file >> device) {
+				std::visit([&](const auto& dev) {
+						Date purchase_date = dev.getPurchaseDate();
 						if (isDateInRange(purchase_date)) {
 							cout << "Устройство " << ++filtered_count << ":\n";
-							cout << thermo;
+							cout << dev;
 							cout << "------------------------\n";
 						}
-						device_checked = true;
 					}
-				}
-
-
-				if (!device_checked) {
-					smartFile.clear();
-					smartFile.seekg(pos);
-					SecurityCamera camera;
-					smartFile >> camera;
-					if (smartFile.good() && camera.getPassword() == user.getPassword()) {
-						Date purchase_date = camera.getPurchaseDate();
-						if (isDateInRange(purchase_date)) {
-							cout << "Устройство " << ++filtered_count << ":\n";
-							cout << camera;
-							cout << "------------------------\n";
-						}
-						device_checked = true;
-					}
-				}
-
-
-				if (!device_checked) {
-					smartFile.clear();
-					smartFile.ignore(1024, '\n');
-				}
-
-				if (smartFile.eof()) break;
+					, device);
 			}
 
 			if (filtered_count == 0) {
@@ -1705,10 +1678,7 @@
 			else {
 				cout << "Найдено устройств: " << filtered_count << "\n";
 			}
-
-			smartFile.close();
 		}
-
 
 		//FileSystem<DeviceScriptVariant>
 
@@ -1736,78 +1706,22 @@
 			cout << "=== Ваши сценарии ===\n";
 			int script_count = 0;
 
-	
 			while (!smartFile.eof()) {
 
 				bool script_found = false;
 
-				DeviceScript<SmartLight> light_script;
-				streampos pos = smartFile.tellg();
-				smartFile >> light_script;
-				if (smartFile.good()) {
-					SmartLight device = light_script.getDevice();
-					if (device.getPassword() == user.getPassword()) {
-						cout << "Сценарий " << ++script_count << ":\n";
-						cout << "Описание: " << light_script.getScript() << "\n";
-						cout << "Длительность: " << light_script.getDuration() << " минут\n";
-						cout << "Устройство: " << device.getTitle() << " (Умный свет)\n";
-						cout << "------------------------\n";
-						script_found = true;
-					}
-				}
-
-
-				if (!script_found) {
-					smartFile.clear();
-					smartFile.seekg(pos);
-					DeviceScript<Thermostat> thermo_script;
-					smartFile >> thermo_script;
-					if (smartFile.good()) {
-						Thermostat device = thermo_script.getDevice();
-						if (device.getPassword() == user.getPassword()) {
-							cout << "Сценарий " << ++script_count << ":\n";
-							cout << "Описание: " << thermo_script.getScript() << "\n";
-							cout << "Длительность: " << thermo_script.getDuration() << " минут\n";
-							cout << "Устройство: " << device.getTitle() << " (Термостат)\n";
-							cout << "------------------------\n";
-							script_found = true;
-						}
-					}
-				}
-
-		
-				if (!script_found) {
-					smartFile.clear();
-					smartFile.seekg(pos);
-					DeviceScript<SecurityCamera> camera_script;
-					smartFile >> camera_script;
-					if (smartFile.good()) {
-						SecurityCamera device = camera_script.getDevice();
-						if (device.getPassword() == user.getPassword()) {
-							cout << "Сценарий " << ++script_count << ":\n";
-							cout << "Описание: " << camera_script.getScript() << "\n";
-							cout << "Длительность: " << camera_script.getDuration() << " минут\n";
-							cout << "Устройство: " << device.getTitle() << " (Камера безопасности)\n";
-							cout << "------------------------\n";
-							script_found = true;
-						}
-					}
-				}
-
-				if (!script_found) {
-					smartFile.clear();
-					smartFile.ignore(1024, '\n');
-				}
+				DeviceScriptVariant script;
+				smartFile >> script;
+				cout << script;
 
 				if (smartFile.eof()) break;
 			}
 
-			if (script_count == 0) {
+			if (!script_count) 
 				cout << "У вас нет сценариев\n";
-			}
-			else {
+			
+			else 
 				cout << "Всего сценариев: " << script_count << "\n";
-			}
 
 			smartFile.close();
 		}
@@ -1856,7 +1770,6 @@
 
 			while (!smartFile.eof()) {
 				DeviceScriptVariant script;
-				streampos pos = smartFile.tellg();
 				smartFile >> script;
 
 				if (smartFile.good()) {
@@ -1864,7 +1777,8 @@
 					bool belongs_to_user = false;
 					std::visit([&user, &belongs_to_user](const auto& scr) {
 						auto device = scr.getDevice();
-						if (device.getPassword() == user.getPassword()) {
+						if (device.getPassword() == user.getPassword())
+						{
 							belongs_to_user = true;
 						}
 						}, script);
@@ -1881,27 +1795,28 @@
 
 				if (smartFile.eof()) break;
 			}
-
-			smartFile.close();
+			if (!user_scripts.empty())
+			{
+				smartFile.close();
+				//removeF(user);
+				return user_scripts;
+			}
+			/*smartFile.close();*/
 			cout << "Выгружено сценариев: " << loaded_count << "\n";
 			return user_scripts;
 		}
 
-		//SmartHome
+		//SmartHomeInteraction
 
-		SmartHome::SmartHome():device_file(),script_file(),user_file(),current_user(nullptr){}
+		shared_ptr<User> SmartHomeInteraction::current_user = nullptr;
+		std::queue<DeviceScriptVariant> SmartHomeInteraction::script_subsequence;
+		FileSystem<DeviceVariant> SmartHomeInteraction::device_file;
+		FileSystem<DeviceScriptVariant> SmartHomeInteraction::script_file;
+		FileSystem<User> SmartHomeInteraction::user_file;
 
-		void SmartHome::setCurrentUser(shared_ptr<User> user) { current_user = user; } //&
+		bool SmartHomeInteraction::hasUser() { return current_user != nullptr; }
 
-		shared_ptr<User> SmartHome::getCurrentUser() const { return current_user; }
-
-		bool SmartHome::hasUser() const { return current_user != nullptr; }
-
-		//MenuInterface
-	
-		SmartHome MenuInteraction::smart_home = SmartHome();
-
-		DeviceVariant MenuInteraction::chooseDevice()
+		DeviceVariant SmartHomeInteraction::chooseDevice()
 		{
 			bool is_running = true;
 			while (is_running)
@@ -1949,7 +1864,7 @@
 			}
 		}
 
-		void MenuInteraction::showSmartHomeMenu()
+		void SmartHomeInteraction::showSmartHomeMenu()
 		{
 			bool is_running = true;
 			short choice;
@@ -1963,10 +1878,12 @@
 					<< "--> 5. Сортировка устройств (по названию)." << endl
 					<< "--> 6. Поиск устройств (по названию)." << endl
 					<< "--> 7. Создание отчета." << endl
-					<< "--> 8. Создание сценария." << endl
-					<< "--> 9. Удаление сценария." << endl
-					<< "--> 10. Редактирование сценария." << endl
-					<< "--> 11. Посмотреть информацию о всех сценариях." << endl
+					<< "--> 8. Фильтрация устройств (online)." << endl
+					<< "--> 9. Фильтрация устройств (по дате)." << endl
+					<< "--> 10. Создание сценария." << endl
+					<< "--> 11. Удаление сценария." << endl
+					<< "--> 12. Редактирование сценария." << endl
+					<< "--> 13. Посмотреть информацию о всех сценариях." << endl
 					<< "--> 0. Выход..." << endl << ">>";
 				while (is_running) {
 					cin >> choice;
@@ -1984,6 +1901,8 @@
 				{
 				case 0:
 				{
+					cout << "Автоматическая запись последовательности девайсов в файл." << endl;
+					script_file.writeF(script_subsequence);
 					is_running = false;
 					break;
 				}
@@ -1991,67 +1910,145 @@
 				{
 					auto device = chooseDevice();
 					cin >> device;
-					string user_password = smart_home.getCurrentUser()->getPassword();
+					string user_password = current_user->getPassword();
 
 					std::visit([user_password](auto&& dev) {
-						using T = std::decay_t<decltype(dev)>;
-						if constexpr (std::is_same_v<T, SmartLight> ||
-							std::is_same_v<T, Thermostat> ||
-							std::is_same_v<T, SecurityCamera>) {
-							dev.setPassword(user_password);
-						}
+						dev.setPassword(user_password);
 						}, device);
-					smart_home.device_file.writeF(device);
+					if (device_file.checkDevice(device))
+						cout << "Данное устройство уже существует на вашем аккаунте." << endl;
+					else
+						device_file.writeF(device);
+					break;
+				}
+				case 2:
+				{
+
+					break;
+				}
+				case 3:
+				{
+
 					break;
 				}
 				case 4:
 				{
-					smart_home.device_file.readF();
+					device_file.readF();
+					break;
+				}
+				case 5:
+				{
+					device_file.sortF();
+					break;
+				}
+				case 6:
+				{
+					string target_dev_name;
+					cout << "Введите название устройства: ";
+					getline(cin, target_dev_name);
+					device_file.searchF(target_dev_name);
+					break;
+				}
+				case 7:
+				{
+
+					break;
+				}
+				case 8:
+				{
+					bool isOnline;
+					cout << "Устройство онлайн? (0-Нет, 1-Да): ";
+					
+					while (true) {
+						cin >> isOnline;
+						if (cin.fail()) {
+							cin.clear();
+							cin.ignore((numeric_limits<streamsize>::max)(), '\n');
+							cout << "Ошибка ввода! Введите 0 или 1: ";
+						}
+						else {
+							cin.ignore((numeric_limits<streamsize>::max)(), '\n');
+							break;
+						}
+					}
+					device_file.filterByOnline(isOnline);
+					break;
+				}
+				case 9:
+				{
+					// проверка на даты f>s
+					Date first_date, second_date;
+					cout << "Введите первую дату:" << endl;
+					cin >> first_date >> second_date;
+					device_file.filterByDate(first_date, second_date);
+					break;
+				}
+				case 10:
+				{
+
+					break;
+				}
+				case 11:
+				{
+					break;
+				}
+				case 12:
+				{
+
+					break;
+				}
+				case 13:
+				{
+					script_file.readF(*current_user);
+					break;
+				}
+				case 14:
+				{
+					cout << "Вы ввели неверный выбор. Попробуйте еще раз." << endl;
 					break;
 				}
 				}
 			}
 		}
 
-		void MenuInteraction::showRegistrationMenu()
+		void SmartHomeInteraction::showRegistrationMenu()
 		{
-			//try {
-				if (smart_home.user_file.isUserExisting(*smart_home.getCurrentUser())) {
-					cout << "Данная учетная запись уже существует, вход совершается автоматически." << endl;
-				}
-				else {
-					smart_home.user_file.writeF(*smart_home.getCurrentUser());
-					cout << "Пользователь зарегистрирован. Добро пожаловать в систему Smart Home!" << endl;
-				}
-			/*}*/
-			/*catch (const std::exception& e) {
-				cout << "Ошибка регистрации: " << e.what() << endl;
-				cout << "Попробуйте позже." << endl;
+
+			if (user_file.checkUser(*current_user) == 1)
+			{
+				cout << "Данная учетная запись уже существует, вход совершается автоматически." << endl;
+			}
+			else if (user_file.checkUser(*current_user) == 0)
+			{
+				user_file.writeF(*current_user);
+				cout << "Пользователь зарегистрирован. Добро пожаловать в систему Smart Home!" << endl;
+			}
+			else 
+			{
+				cout << "Пользователь уже существует с таким же именем." << std::endl;
 				return;
-			}*/
+			}
+			
+			
 			showMainMenu();
 		}
 
-		void MenuInteraction::showLoginMenu()
+		void SmartHomeInteraction::showLoginMenu()
 		{
-			try {
-				if (smart_home.user_file.isUserExisting(*smart_home.getCurrentUser())) {
+
+				if (user_file.checkUser(*current_user) == 1) {
 					cout << "Вход выполнен успешно! Добро пожаловать!" << endl;
 				}
-				else
+				else if(user_file.checkUser(*current_user) == 0)
 				{
 					cout << "Пользователь не найден. Проверьте логин и пароль." << endl;
 					return;
 				}
-			}
-			catch (const std::exception& e) {
-				cout << "Ошибка входа: " << e.what() << endl;
-				return;
-			}
+
 			showMainMenu();
 		}
 
-		void MenuInteraction::showRoleHeaderMenu()
+		void SmartHomeInteraction::showRoleHeaderMenu()
 		{
 			cout << "Меню выбора роли:" << endl
 				<< "--> 1.User." << endl
@@ -2061,12 +2058,12 @@
 				<< "Выберите соответствующую роль" << std::endl << ">>";
 		}
 
-		void MenuInteraction::showUserMenu()
+		void SmartHomeInteraction::showUserMenu()
 		{
 			showAuthorMenu();
 		}
 
-		void MenuInteraction::showAdminMenu()
+		void SmartHomeInteraction::showAdminMenu()
 		{
 			 std::ifstream file("for_admins.txt", std::ios::in);
 			if (!file.is_open()) {
@@ -2095,7 +2092,7 @@
 			showAuthorMenu();
 		}
 
-		void MenuInteraction::showGuestMenu()
+		void SmartHomeInteraction::showGuestMenu()
 		{
 			bool is_running = true;
 			short choice;
@@ -2142,17 +2139,18 @@
 			}
 		}
 
-		void MenuInteraction::showMainMenu()
+		void SmartHomeInteraction::showMainMenu()
 		{
 			bool is_running = true;
 			short choice;
-			smart_home.device_file.setFileName(smart_home.getCurrentUser()->getUserName());
+			device_file.setFileName(current_user->getUserName());
+			script_subsequence = script_file.unloadScripts(*current_user);
 			while (is_running)
 			{
 				cout << "Главное меню:" << endl
 					<< "--> 1.Умный дом." << endl
 					<< "--> 2.Учётная запись." << endl
-					<< ((smart_home.getCurrentUser()->getRole() == Admin_) ? "--> 3. Админские операции\n" : "")
+					<< ((current_user->getRole() == Admin_) ? "--> 3. Админские операции\n" : "")
 					<< "--> 0.Выход..." << endl << ">>";
 				while (is_running) {
 					cin >> choice;
@@ -2185,7 +2183,7 @@
 				}
 				case 3:
 				{
-					if(smart_home.getCurrentUser()->getRole() == User_)
+					if(current_user->getRole() == User_)
 					{ }
 					else {
 
@@ -2203,16 +2201,16 @@
 			}
 		}
 
-		void MenuInteraction::showAuthorMenu()
+		void SmartHomeInteraction::showAuthorMenu()
 		{
 			bool is_running = true;
 			short choice;
-			UserRole temp_role = smart_home.getCurrentUser()->getRole();
+			UserRole temp_role = current_user->getRole();
 			while (is_running)
 			{
 				cout << "Меню учетной записи:" << endl
 					<< "--> 1. Создать учётную запись." << endl
-					<< ((smart_home.getCurrentUser()->getRole() == User_ || smart_home.getCurrentUser()->getRole() == Admin_) ? "--> 2. Войти в учётную запись.\n" : "")
+					<< ((current_user->getRole() != Guest_) ? "--> 2. Войти в учётную запись.\n" : "")
 					<< "--> 0.Выход..." << endl << ">>";
 
 				while (true) {
@@ -2233,25 +2231,25 @@
 				case 0:
 				{
 					is_running = false;
-					smart_home.setCurrentUser(nullptr);
+					current_user = nullptr;
 					break;
 				}
 				case 1:
 				{
-					if (smart_home.getCurrentUser()->getRole() == Guest_)
-						smart_home.getCurrentUser()->setRole(User_);
+					if (current_user->getRole() == Guest_)
+						current_user->setRole(User_);
 
-					cin >> *smart_home.getCurrentUser();
+					cin >> *current_user;
 					showRegistrationMenu();
 					auto user = make_shared<User>();
 					user->setRole(temp_role);
-					smart_home.setCurrentUser(user);
+					current_user = user;
 					break;
 				}
 				case 2:
 				{
-					cout << *smart_home.getCurrentUser() << endl;
-					if (smart_home.getCurrentUser()->getRole() == Guest_){}
+					cout << *current_user << endl;
+					if (current_user->getRole() == Guest_){}
 					else {
 						string attempt_name;
 						string attempt_password;
@@ -2261,13 +2259,13 @@
 						cout << "Введите пароль: ";
 						getline(cin, attempt_password);
 
-						smart_home.getCurrentUser()->setUserName(attempt_name);
-						smart_home.getCurrentUser()->setPassword(attempt_password);
+						current_user->setUserName(attempt_name);
+						current_user->setPassword(attempt_password);
 
 						showLoginMenu();
 						auto user = make_shared<User>();
 						user->setRole(temp_role);
-						smart_home.setCurrentUser(user);
+						current_user = user;
 						break;
 					}
 				}
@@ -2280,7 +2278,7 @@
 			}
 		}
 
-		void MenuInteraction::showDeviceCatalogHeaderMenu()
+		void SmartHomeInteraction::showDeviceCatalogHeaderMenu()
 		{
 			cout << "Каталог смарт устройств" << endl
 				<< "0. Smart Light" << endl
@@ -2288,7 +2286,7 @@
 				<< "2. Security Camera" << endl;
 		}
 
-		void MenuInteraction::showEntryMenu()
+		void SmartHomeInteraction::showEntryMenu()
 		{
 			bool is_running = true;
 			short choice;
@@ -2314,27 +2312,27 @@
 				{
 					auto user = make_shared<User>();
 					user->setRole(User_);
-					smart_home.setCurrentUser(user);
+					current_user = user;
 					showUserMenu();
-					smart_home.setCurrentUser(nullptr);
+					current_user = nullptr;
 					break;
 				}
 				case 2:
 				{
 					auto user = make_shared<User>();
 					user->setRole(Admin_);
-					smart_home.setCurrentUser(user);
+					current_user = user;
 					showAdminMenu();
-					smart_home.setCurrentUser(nullptr);
+					current_user = nullptr;
 					break;
 				}
 				case 3:
 				{
 					auto user = make_shared<User>();
 					user->setRole(Guest_);
-					smart_home.setCurrentUser(user);
+					current_user = user;
 					showGuestMenu();
-					smart_home.setCurrentUser(nullptr);
+					current_user = nullptr;
 					break;
 				}
 				case 4:

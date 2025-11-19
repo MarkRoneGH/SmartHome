@@ -1,6 +1,6 @@
 #include "prototype.h"
 
-using smart_system::MenuInteraction;
+using smart_system::SmartHomeInteraction;
 
 int main()
 {
@@ -9,7 +9,7 @@ int main()
 	SetConsoleOutputCP(1251);
 
 	try {
-		MenuInteraction::showEntryMenu();
+		SmartHomeInteraction::showEntryMenu();
 	}
 	catch (std::exception& e)
 	{

@@ -5,8 +5,8 @@ using smart_system::SmartHomeInteraction;
 int main()
 {
 	system("color f0");
-	SetConsoleCP(1251);
-	SetConsoleOutputCP(1251);
+	SetConsoleCP(CP_UTF8);
+	SetConsoleOutputCP(CP_UTF8);
 
 	try {
 		SmartHomeInteraction::showEntryMenu();

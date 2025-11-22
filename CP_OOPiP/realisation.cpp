@@ -2,6 +2,29 @@
 	#pragma warning(disable:4996)
 	namespace smart_system
 	{
+
+		std::string getPasswordWithDots() {
+			std::string password;
+			char ch;
+
+			std::cout << "Введите пароль: ";
+
+			while ((ch = _getch()) != '\r') {
+				if (ch == '\b') {
+					if (!password.empty()) {
+						password.pop_back();
+						std::cout << "\b \b";
+					}
+				}
+				else if (ch >= 32 && ch <= 126) {
+					password += ch;
+					std::cout << '•';
+				}
+			}
+			std::cout << std::endl;
+			return password;
+		}
+
 		//SmartSmth
 		SmartSmth::SmartSmth() 
 		{
@@ -586,9 +609,10 @@
 				cout << "Введите имя пользователя: ";
 				in.getline(user.user_name, SIZE_BUFF);
 
-				cout << "Введите пароль: ";
+				/*cout << "Введите пароль: ";*/
 				string temp_password;
-				getline(in, temp_password);
+				/*getline(in, temp_password);*/
+				temp_password = getPasswordWithDots();
 				user.setPassword(temp_password);
 
 				cout << "Введите данные о местоположении:" << endl;
@@ -1168,6 +1192,12 @@
 		}
 
 		template<smartDeviceType T>
+		void DeviceScript<T>::setDuration(const short duration)
+		{
+			this->duration_ = duration;
+		}
+
+		template<smartDeviceType T>
 		std::string DeviceScript<T>::getScript() const
 		{
 			return script;
@@ -1247,13 +1277,13 @@
 				}
 			}
 			else {
-				cout << "Select device type for script:\n";
+				/*cout << "Select device type for script:\n";
 				cout << "1. Smart Light\n";
 				cout << "2. Thermostat\n";
 				cout << "3. Security Camera\n";
 				cout << "Your choice: ";
 
-				int choice;
+				short choice;
 				in >> choice;
 
 				switch (choice) {
@@ -1285,7 +1315,7 @@
 					variant = default_script;
 					break;
 				}
-				}
+				}*/
 			}
 			return in;
 		}
@@ -1434,7 +1464,7 @@
 			cout << "Устройства отсортированы по названию\n";
 		}
 
-		bool FileSystem<DeviceVariant>::checkDevice(DeviceVariant& device)
+		bool FileSystem<DeviceVariant>::checkDevice(const DeviceVariant& device)
 		{
 			smartFile.open(file_name, std::ios::in | std::ios::binary);
 
@@ -1464,20 +1494,20 @@
 			return found;
 		}
 
-		void FileSystem<DeviceVariant>::readF()
+		int FileSystem<DeviceVariant>::readF()
 		{
 
 			smartFile.open(file_name, ios::in | ios::binary);
 			if (!smartFile.is_open()) {
 				cout << "Файл устройств не найден или пуст\n";
-				return;
+				return 0;
 			}
 
 			smartFile.seekg(0, ios::end);
 			if (smartFile.tellg() == 0) {
 				cout << "У вас пока нет устройств\n";
 				smartFile.close();
-				return;
+				return 0;
 			}
 			smartFile.seekg(0, ios::beg);
 
@@ -1503,14 +1533,54 @@
 				if (smartFile.eof()) break;
 			}
 
-			if (device_count == 0) {
-				cout << "У вас нет устройств\n";
+			cout << "Всего устройств: " << device_count << "\n";
+			
+			smartFile.close();
+			return device_count;
+		}
+
+		DeviceVariant FileSystem<DeviceVariant>::chooseCertainDevice(const int count)
+		{
+			if (count <= 0) {
+				throw std::runtime_error("Нет доступных устройств для выбора");
 			}
-			else {
-				cout << "Всего устройств: " << device_count << "\n";
+
+			smartFile.open(file_name, ios::in | ios::binary);
+			if (!smartFile.is_open()) {
+				throw std::runtime_error("Не удалось открыть файл устройств: " + file_name);
+			}
+
+			int choice;
+			cout << "Выберите устройство (1-" << count << "): ";
+
+			while (true) {
+				cin >> choice;
+				if (cin.fail() || choice < 1 || choice > count) {
+					cin.clear();
+					cin.ignore((numeric_limits<streamsize>::max)(), '\n');
+					cout << "Ошибка ввода! Введите число от 1 до " << count << ": ";
+				}
+				else {
+					cin.ignore((numeric_limits<streamsize>::max)(), '\n');
+					break;
+				}
+			}
+
+
+			DeviceVariant selected_device;
+			int current = 0;
+
+			while (current < choice && smartFile >> selected_device) {
+				current++;
 			}
 
 			smartFile.close();
+
+			if (current != choice) {
+				throw std::runtime_error("Ошибка: не удалось прочитать выбранное устройство");
+			}
+
+			return selected_device;
 		}
 
 		string FileSystem<DeviceVariant>::getFileName() const
@@ -1686,7 +1756,7 @@
 
 		FileSystem<DeviceScriptVariant>::FileSystem() { file_name = "device_scripts_storage.dat"; }
 
-		void FileSystem<DeviceScriptVariant>::readF(const User& user)
+		/*void FileSystem<DeviceScriptVariant>::readF(const User& user)
 		{
 			smartFile.open(file_name, ios::in | ios::binary);
 			if (!smartFile.is_open()) {
@@ -1724,7 +1794,7 @@
 				cout << "Всего сценариев: " << script_count << "\n";
 
 			smartFile.close();
-		}
+		}*/
 
 		void FileSystem<DeviceScriptVariant>::writeF(queue<DeviceScriptVariant>& queue)
 		{
@@ -1745,6 +1815,75 @@
 
 			smartFile.close();
 			cout << "Очередь сценариев успешно записана в файл\n";
+		}
+
+		void FileSystem<DeviceScriptVariant>::removeF(const User& user)
+		{
+
+			smartFile.open(file_name, ios::in | ios::binary);
+			if (!smartFile.is_open()) {
+				cout << "Файл сценариев не найден\n";
+				return;
+			}
+
+			smartFile.seekg(0, ios::end);
+			if (smartFile.tellg() == 0) {
+				cout << "Файл сценариев пуст\n";
+				smartFile.close();
+				return;
+			}
+			smartFile.seekg(0, ios::beg);
+
+			std::vector<DeviceScriptVariant> remaining_scripts;
+			int removed_count = 0;
+
+			while (!smartFile.eof()) {
+				DeviceScriptVariant script;
+				smartFile >> script;
+
+				if (smartFile.good()) {
+					bool belongs_to_user = false;
+					std::visit([&user, &belongs_to_user](const auto& scr) {
+						auto device = scr.getDevice();
+						if (device.getPassword() == user.getPassword()) {
+							belongs_to_user = true;
+						}
+						}, script);
+
+					if (belongs_to_user) {
+						removed_count++;
+					}
+					else {
+						remaining_scripts.push_back(script);
+					}
+				}
+				else {
+					if (!smartFile.eof()) {
+						smartFile.clear();
+						smartFile.ignore(1024, '\n');
+					}
+				}
+
+				if (smartFile.eof()) break;
+			}
+			smartFile.close();
+
+			if (removed_count == 0) {
+				cout << "Сценарии пользователя " << user.getUserName() << " не найдены\n";
+				return;
+			}
+
+			smartFile.open(file_name, ios::out | ios::binary | ios::trunc);
+			if (!smartFile.is_open()) {
+				throw runtime_error("Не удалось открыть файл сценариев для перезаписи");
+			}
+
+			for (const auto& script : remaining_scripts) {
+				smartFile << script;
+			}
+
+			smartFile.close();
+			cout << "Удалено сценариев пользователя " << user.getUserName() << ": " << removed_count << "\n";
 		}
 
 		std::queue<DeviceScriptVariant> FileSystem<DeviceScriptVariant>::unloadScripts(const User& user)
@@ -1798,10 +1937,10 @@
 			if (!user_scripts.empty())
 			{
 				smartFile.close();
-				//removeF(user);
+				removeF(user);
 				return user_scripts;
 			}
-			/*smartFile.close();*/
+			smartFile.close();
 			cout << "Выгружено сценариев: " << loaded_count << "\n";
 			return user_scripts;
 		}
@@ -1813,6 +1952,26 @@
 		FileSystem<DeviceVariant> SmartHomeInteraction::device_file;
 		FileSystem<DeviceScriptVariant> SmartHomeInteraction::script_file;
 		FileSystem<User> SmartHomeInteraction::user_file;
+
+		void SmartHomeInteraction::printScripts()
+		{
+			if (script_subsequence.empty()) {
+				cout << "Очередь сценариев пуста.\n";
+				return;
+			}
+
+			cout << "=== Очередь сценариев ===\n";
+			cout << "Всего сценариев: " << script_subsequence.size() << "\n\n";
+
+			std::queue<DeviceScriptVariant> temp_queue = script_subsequence;
+			int counter = 1;
+
+			while (!temp_queue.empty()) {
+				cout << "--- Сценарий " << counter++ << " ---\n";
+				cout << temp_queue.front() << "\n";
+				temp_queue.pop();
+			}
+		}
 
 		bool SmartHomeInteraction::hasUser() { return current_user != nullptr; }
 
@@ -1901,9 +2060,8 @@
 				{
 				case 0:
 				{
-					cout << "Автоматическая запись последовательности девайсов в файл." << endl;
-					script_file.writeF(script_subsequence);
 					is_running = false;
+					cout << "\n\n";
 					break;
 				}
 				case 1:
@@ -1985,6 +2143,32 @@
 				}
 				case 10:
 				{
+					int count = device_file.readF();
+					if (!count)
+					
+						cout << "К сожалению вы не можете добавить сценарий." << std::endl;
+					else
+					{
+						auto device_variant = device_file.chooseCertainDevice(count);
+
+						cout << "Введите описание сценария: ";
+						string script_desc;
+						getline(cin, script_desc);
+
+
+						cout << "Введите длительность сценария (в минутах): ";
+						short duration;
+						cin >> duration;
+						cin.ignore();
+
+						DeviceScriptVariant dev_script = std::visit([&script_desc, &duration](const auto& concrete_device) -> DeviceScriptVariant {
+							return DeviceScript<std::decay_t<decltype(concrete_device)>>(concrete_device,script_desc,duration);
+							}, device_variant);
+
+
+						SmartHomeInteraction::script_subsequence.push(dev_script);
+						cout << "Сценарий успешно добавлен!\n";
+					}
 
 					break;
 				}
@@ -1999,7 +2183,7 @@
 				}
 				case 13:
 				{
-					script_file.readF(*current_user);
+					printScripts();
 					break;
 				}
 				case 14:
@@ -2054,7 +2238,7 @@
 				<< "--> 1.User." << endl
 				<< "--> 2.Admin." << endl
 				<< "--> 3.Guest." << endl
-				<< "--> 4.Выход..." << endl
+				<< "--> 0.Выход..." << endl
 				<< "Выберите соответствующую роль" << std::endl << ">>";
 		}
 
@@ -2101,7 +2285,7 @@
 				cout << "Гостевое Меню" << endl
 					<< "1. Регистрация" << endl
 					<< "2. Просмотр перечня смарт-устройств" << endl
-					<< "3. Выход..." << endl << ">>";
+					<< "0. Выход..." << endl << ">>";
 				while (is_running) {
 					cin >> choice;
 					if (cin.fail()) {
@@ -2115,6 +2299,12 @@
 					}
 				}
 				switch (choice) {
+				case 0:
+				{
+					is_running = false;
+					cout << "\n\n";
+					break;
+				}
 				case 1:
 				{
 					showAuthorMenu();
@@ -2125,11 +2315,7 @@
 					showDeviceCatalogHeaderMenu();
 					break;
 				}
-				case 3:
-				{
-					is_running = false;
-					break;
-				}
+				
 				default:
 				{
 					cout << "Был введен неверный выбор. Попробуйте снова." << std::endl;
@@ -2168,7 +2354,10 @@
 				{
 				case 0:
 				{
+					cout << "Автоматическая запись последовательности девайсов в файл." << endl;
+					script_file.writeF(script_subsequence);
 					is_running = false;
+					cout << "\n\n";
 					break;
 				}
 				case 1:
@@ -2232,6 +2421,7 @@
 				{
 					is_running = false;
 					current_user = nullptr;
+					cout << "\n\n";
 					break;
 				}
 				case 1:
@@ -2257,7 +2447,7 @@
 						getline(cin, attempt_name);
 
 						cout << "Введите пароль: ";
-						getline(cin, attempt_password);
+						attempt_password = getPasswordWithDots();
 
 						current_user->setUserName(attempt_name);
 						current_user->setPassword(attempt_password);
@@ -2308,6 +2498,11 @@
 				}
 				switch (choice)
 				{
+				case 0:
+				{
+					is_running = false;
+					break;
+				}
 				case 1:
 				{
 					auto user = make_shared<User>();
@@ -2333,11 +2528,6 @@
 					current_user = user;
 					showGuestMenu();
 					current_user = nullptr;
-					break;
-				}
-				case 4:
-				{
-					is_running = false;
 					break;
 				}
 				default:

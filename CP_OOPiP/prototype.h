@@ -12,6 +12,7 @@
 #include <concepts>
 #include <queue>
 #include <variant>
+#include <conio.h>
 
 #define SIZE_BUFF 64
 #define OpenFileERROR "There's the OPEN_FILE ERROR..."
@@ -28,11 +29,10 @@ namespace smart_system
 	class Thermostat;
 	class SmartLight;
 	class SecurityCamera;
-	class MenuInterface;
+	class SmartHomeInteraction;
 	class Date;
 	enum class SmartType;
 	class UserLocation;
-	class DeviceHandler;
 
 	using DeviceVariant = std::variant<SmartLight, Thermostat, SecurityCamera>;
 
@@ -287,6 +287,7 @@ namespace smart_system
 		short getDuration() const;
 		std::string getScript() const;
 		void setScript(const string& script);
+		void setDuration(const short duration);
 	};
 	
 
@@ -298,8 +299,10 @@ namespace smart_system
 		string file_name;
 		//friend void operator<<(ostream& out, FileSystem&);
 	public:
-		bool checkDevice(DeviceVariant& device);
-		void readF();
+
+		bool checkDevice(const DeviceVariant& device);
+		int readF();
+		DeviceVariant chooseCertainDevice(const int count);
 		void writeF(const DeviceVariant& device);
 		void editF(const DeviceVariant& device);
 		void searchF(const string& dev_name);
@@ -340,15 +343,14 @@ namespace smart_system
 		string file_name;
 		//friend void operator<<(ostream& out, FileSystem&);
 	public:
-		void readF(const User& user);
-		void readF(UserRole role, const User& user);
+		//void readF(const User& user);
+		//void readF(UserRole role, const User& user);
 		std::queue<DeviceScriptVariant> unloadScripts(const User& user);
 		void writeF(queue<DeviceScriptVariant>& queue);
-		void removeF(const DeviceScriptVariant& dev_script);
+		void removeF(const User& user);
 		FileSystem();
 		~FileSystem() = default;
 		string getFileName() const;
-		void editF(const DeviceScriptVariant& dev_script);
 		//void searchF(const DeviceScriptVariant& dev_script);
 
 	};
@@ -359,6 +361,7 @@ namespace smart_system
 		static shared_ptr<User> current_user;
 		static std::queue<DeviceScriptVariant> script_subsequence;
 		static DeviceVariant chooseDevice();
+		static void printScripts();
 		static void showUserMenu();
 		static void showAdminMenu();
 		static void showGuestMenu();

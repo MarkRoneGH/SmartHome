@@ -1630,6 +1630,92 @@
 			smartFile.close();
 		}
 
+		DeviceVariant FileSystem<DeviceVariant>::removeF(int pos)
+		{
+			if (pos < 1) {
+				throw std::invalid_argument("Позиция должна быть положительным числом");
+			}
+
+			smartFile.open(file_name, ios::in | ios::out | ios::binary);
+			if (!smartFile.is_open()) {
+				throw std::runtime_error("Не удалось открыть файл устройств: " + file_name);
+			}
+
+			smartFile.seekg(0, ios::end);
+			std::streampos fileSize = smartFile.tellg();
+			if (fileSize <= 0) {
+				smartFile.close();
+				throw std::runtime_error("Файл устройств пуст");
+			}
+			smartFile.seekg(0, ios::beg);
+
+			DeviceVariant device_to_remove;
+			int current_pos = 1;
+			std::streampos remove_position = 0;
+
+
+			while (current_pos < pos) {
+				remove_position = smartFile.tellg();
+
+				DeviceVariant temp;
+				if (!(smartFile >> temp)) {
+					smartFile.close();
+					throw std::runtime_error("Ошибка чтения устройства на позиции " + std::to_string(current_pos));
+				}
+				current_pos++;
+			}
+
+
+			remove_position = smartFile.tellg();
+
+			if (!(smartFile >> device_to_remove)) {
+				smartFile.close();
+				throw std::runtime_error("Не удалось прочитать устройство для удаления на позиции " + std::to_string(pos));
+			}
+
+
+			std::streampos next_position = smartFile.tellg();
+
+			if (next_position < fileSize) {
+				DeviceVariant temp_device;
+				std::streampos current_read_pos = next_position;
+				std::streampos current_write_pos = remove_position;
+
+				while (current_read_pos < fileSize) {
+					smartFile.seekg(current_read_pos);
+					if (!(smartFile >> temp_device)) {
+						break;
+					}
+
+					smartFile.seekp(current_write_pos);
+					smartFile << temp_device;
+
+					current_read_pos = smartFile.tellg();
+					current_write_pos = smartFile.tellp();
+
+					if (current_read_pos >= fileSize) break;
+				}
+			}
+
+			smartFile.close();
+
+			std::streampos new_size;
+			if (next_position >= fileSize) {
+
+				new_size = remove_position;
+			}
+			else {
+
+				new_size = fileSize - (next_position - remove_position);
+			}
+
+
+			std::filesystem::resize_file(file_name, new_size);
+
+			cout << "Устройство на позиции " << pos << " успешно удалено\n";
+			return device_to_remove;
+		}
+
 		void FileSystem<DeviceVariant>::searchF(const string& dev_name)
 		{
 			std::ifstream file(file_name, ios::binary);
@@ -1953,6 +2039,43 @@
 		FileSystem<DeviceScriptVariant> SmartHomeInteraction::script_file;
 		FileSystem<User> SmartHomeInteraction::user_file;
 
+		void SmartHomeInteraction::removeScript(const DeviceVariant& target_device)
+		{
+			if (script_subsequence.empty()) {
+				cout << "Очередь сценариев пуста\n";
+				return;
+			}
+
+			std::queue<DeviceScriptVariant> temp_queue;
+			int removed_count = 0;
+
+			while (!script_subsequence.empty()) {
+				DeviceScriptVariant script = script_subsequence.front();
+				script_subsequence.pop();
+
+				bool should_remove = std::visit([&](const auto& script_obj) -> bool {
+					auto device_in_script = script_obj.getDevice();
+					return device_in_script == target_device;
+					}, script);
+
+				if (!should_remove) {
+					temp_queue.push(script);
+				}
+				else {
+					removed_count++;
+				}
+			}
+
+			script_subsequence = temp_queue;
+
+			if (removed_count > 0) {
+				cout << "Удалено сценариев для указанного устройства: " << removed_count << "\n";
+			}
+			else {
+				cout << "Сценарии для указанного устройства не найдены\n";
+			}
+		}
+
 		void SmartHomeInteraction::printScripts()
 		{
 			if (script_subsequence.empty()) {
@@ -2086,7 +2209,22 @@
 				}
 				case 3:
 				{
-
+					int count = device_file.readF();
+					int choice;
+					while (true) {
+						cin >> choice;
+						if (cin.fail() || choice < 1 || choice > count) {
+							cin.clear();
+							cin.ignore((numeric_limits<streamsize>::max)(), '\n');
+							cout << "Ошибка ввода! Введите число от 1 до " << count << ": ";
+						}
+						else {
+							cin.ignore((numeric_limits<streamsize>::max)(), '\n');
+							break;
+						}
+					}
+					auto device = device_file.removeF(choice);
+					if (!script_subsequence.empty()) removeScript(device);
 					break;
 				}
 				case 4:
@@ -2174,6 +2312,13 @@
 				}
 				case 11:
 				{
+					if (script_subsequence.empty()) cout << "На вашем аккаунте нет сценариев." << endl;
+					else 
+					{
+						int count = device_file.readF();
+						auto device_variant = device_file.chooseCertainDevice(count);
+						removeScript(device_variant);
+					}
 					break;
 				}
 				case 12:
@@ -2438,7 +2583,7 @@
 				}
 				case 2:
 				{
-					cout << *current_user << endl;
+					//cout << *current_user << endl;
 					if (current_user->getRole() == Guest_){}
 					else {
 						string attempt_name;
@@ -2446,7 +2591,6 @@
 						cout << "Введите имя пользователя:";
 						getline(cin, attempt_name);
 
-						cout << "Введите пароль: ";
 						attempt_password = getPasswordWithDots();
 
 						current_user->setUserName(attempt_name);

@@ -13,6 +13,7 @@
 #include <queue>
 #include <variant>
 #include <conio.h>
+#include <filesystem>
 
 #define SIZE_BUFF 64
 #define OpenFileERROR "There's the OPEN_FILE ERROR..."
@@ -297,7 +298,6 @@ namespace smart_system
 	{
 		fstream smartFile;
 		string file_name;
-		//friend void operator<<(ostream& out, FileSystem&);
 	public:
 
 		bool checkDevice(const DeviceVariant& device);
@@ -308,7 +308,8 @@ namespace smart_system
 		void searchF(const string& dev_name);
 		void filterByOnline(bool online);
 		void filterByDate(const Date& first_date, const Date& second_date);
-		void removeF(const DeviceVariant& device);
+		//void removeF(const DeviceVariant& device);
+		DeviceVariant removeF(int pos);
 		void sortF();
 		FileSystem();
 		void setFileName(const string& file_name);
@@ -358,6 +359,7 @@ namespace smart_system
 	static class SmartHomeInteraction final
 	{
 		/*		void setFormat(); */// setf флаги формат.
+		static void removeScript(const DeviceVariant& device);
 		static shared_ptr<User> current_user;
 		static std::queue<DeviceScriptVariant> script_subsequence;
 		static DeviceVariant chooseDevice();

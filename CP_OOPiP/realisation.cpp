@@ -32,7 +32,7 @@
 			memset(owner_password, '\0', SIZE_BUFF);
 			anyType = Light;
 			isOnline = false;
-			purchase_date = Date();
+			release_date = Date();
 		}
 		bool SmartSmth::getOnline() const { return isOnline; }
 		string SmartSmth::getTitle() const { return string(title); }
@@ -40,13 +40,13 @@
 		void SmartSmth::setOnline(const bool online) { isOnline = online; }
 		void SmartSmth::setPurchaseDate(const Date& purchase_date)
 		{
-			this->purchase_date = purchase_date;
+			this->release_date = purchase_date;
 		}
-		Date SmartSmth::getPurchaseDate() const { return purchase_date; }
+		Date SmartSmth::getPurchaseDate() const { return release_date; }
 		void SmartSmth::setTitle(const string& title)
 		{
-			if (title.empty() || title.length() >= SIZE_BUFF) {
-				//throw std::invalid_argument("Неверное значение название smart-девайса.");
+			if (title.length() >= SIZE_BUFF) {
+				throw std::invalid_argument("Неверное значение название smart-девайса.");
 			}
 			strncpy_s(this->title, title.c_str(), SIZE_BUFF - 1);
 			this->title[SIZE_BUFF - 1] = '\0';
@@ -84,12 +84,11 @@
 
 				out.write(reinterpret_cast<const char*>(&device.isOnline), sizeof(device.isOnline));
 
-				out << device.purchase_date;
+				out << device.release_date;
 			}
 			else {
 
 				out << "Device Title: " << device.title << "\n";
-				out << "Password: " << device.owner_password << "\n";
 				out << "Type: ";
 				switch (device.anyType) {
 				case SmartType::Light: out << "Light"; break;
@@ -98,7 +97,7 @@
 				}
 				out << "\n";
 				out << "Online: " << (device.isOnline ? "Yes" : "No") << "\n";
-				out << "Purchase Date: " << device.purchase_date << "\n";
+				out << "Purchase Date: " << device.release_date << "\n";
 			}
 			return out;
 		}	
@@ -137,31 +136,12 @@
 					return in;
 				}
 
-				in >> device.purchase_date;
+				in >> device.release_date;
 			}
 			else {
 
 				cout << "Введите название устройства: ";
 				in.getline(device.title, SIZE_BUFF);
-
-				//cout << "Введите пароль владельца: ";
-				//in.getline(device.owner_password, SIZE_BUFF);
-
-				/*cout << "Введите тип устройства (0-Свет, 1-Термостат, 2-Камера): ";
-				int type;
-				while (true) {
-					in >> type;
-					if (cin.fail() || type < 0 || type > 2) {
-						cin.clear();
-						cin.ignore((numeric_limits<streamsize>::max)(), '\n');
-						cout << "Ошибка ввода! Введите число от 0 до 2: ";
-					}
-					else {
-						cin.ignore((numeric_limits<streamsize>::max)(), '\n');
-						break;
-					}
-				}
-				device.anyType = static_cast<SmartType>(type);*/
 
 				cout << "Устройство онлайн? (0-Нет, 1-Да): ";
 				while (true) {
@@ -178,7 +158,7 @@
 				}
 
 				cout << "Введите дату покупки (дд.мм.гггг): ";
-				in >> device.purchase_date;
+				in >> device.release_date;
 			}
 			return in;
 		}
@@ -189,7 +169,7 @@
 				strcmp(lhs.owner_password, rhs.owner_password) == 0 &&
 				lhs.anyType == rhs.anyType &&
 				lhs.isOnline == rhs.isOnline &&
-				lhs.purchase_date == rhs.purchase_date;
+				lhs.release_date == rhs.release_date;
 		}
 
 		//UserBirthDate
@@ -376,6 +356,20 @@
 				lhs.day_ == rhs.day_;
 		}
 
+		bool operator<(const Date& lhs, const Date& rhs)
+		{
+
+			if (lhs.year_ != rhs.year_) {
+				return lhs.year_ < rhs.year_;
+			}
+
+			if (lhs.month_ != rhs.month_) {
+				return lhs.month_ < rhs.month_;
+			}
+
+			
+			return lhs.day_ < rhs.day_;
+		}
 		//UserLocation
 
 		UserLocation::UserLocation()
@@ -502,7 +496,7 @@
 		UserRole User::getRole() const { return anyRole; }
 		Date User::getUserDate() const { return date_; }
 
-		string User::hashPassword(const string& password)
+		string hashPassword(const string& user_name,const string& password)
 		{
 			return string(user_name) + password + "_" + std::to_string(password.size() * 12345);
 			/*return "salted_" + password + "_" + std::to_string(password.size() * 12345);*/
@@ -514,15 +508,15 @@
 
 		void User::setPassword(const string& password)
 		{
-			string hashed = hashPassword(password);
-			strncpy_s(this->hashed_password, hashed.c_str(), SIZE_BUFF - 1);
+			/*string hashed_password = hashPassword(string(this->user_name),password);*/
+			strncpy_s(this->hashed_password, password.c_str(), SIZE_BUFF - 1);
 			this->hashed_password[SIZE_BUFF - 1] = '\0';
 		}
 
 		void User::setUserName(const string& user_name)
 		{
-			if (user_name.empty() || user_name.length() >= SIZE_BUFF) {
-	/*			throw std::invalid_argument("Неверное значение название smart-девайса.");*/
+			if (user_name.length() >= SIZE_BUFF) {
+				throw std::invalid_argument("Неверное значение название smart-девайса.");
 			}
 			strncpy_s(this->user_name, user_name.c_str(), SIZE_BUFF - 1);
 			this->user_name[SIZE_BUFF - 1] = '\0';
@@ -609,10 +603,11 @@
 				cout << "Введите имя пользователя: ";
 				in.getline(user.user_name, SIZE_BUFF);
 
-				/*cout << "Введите пароль: ";*/
+
 				string temp_password;
-				/*getline(in, temp_password);*/
+
 				temp_password = getPasswordWithDots();
+				temp_password = hashPassword(user.getUserName(),temp_password);
 				user.setPassword(temp_password);
 
 				cout << "Введите данные о местоположении:" << endl;
@@ -641,7 +636,7 @@
 			setColor(color);
 		}
 
-		int SmartLight::getBright() const { return brightness_; }
+		int SmartLight::getBrightness() const { return brightness_; }
 
 		string SmartLight::getColor() const { return string(color); }
 
@@ -655,8 +650,9 @@
 		}
 
 		void SmartLight::setColor(const string& newColor) {
-			if (newColor.empty() || newColor.length() >= SIZE_BUFF) {
-				//throw std::invalid_argument("Invalid color value");
+			if (newColor.length() >= SIZE_BUFF)
+			{
+				throw std::invalid_argument("Invalid color value");
 			}
 			strncpy_s(color, newColor.c_str(), SIZE_BUFF - 1);
 			color[SIZE_BUFF - 1] = '\0';
@@ -743,7 +739,7 @@
 			const SmartSmth& base_rhs = rhs;
 			if (!(base_lhs == base_rhs)) return false;
 
-			return lhs.getBright() == rhs.getBright() &&
+			return lhs.getBrightness() == rhs.getBrightness() &&
 				lhs.getColor() == rhs.getColor();
 		}
 
@@ -773,11 +769,13 @@
 
 		void Thermostat::setMode(const string& newMode)
 		{
-			if (newMode.empty() || newMode.length() >= SIZE_BUFF) {
-	/*			throw std::invalid_argument("Неверное значение режима.");*/
+			if (newMode.length() >= SIZE_BUFF) {
+				throw std::invalid_argument("Неверное значение режима.");
 			}
 			strncpy_s(mode, newMode.c_str(), SIZE_BUFF - 1);
 		}
+
+		string Thermostat::getMode() const { return mode; }
 
 		ostream& operator<<(ostream& out, const Thermostat& thermostat)
 		{
@@ -894,45 +892,18 @@
 		// SecurityCamera
 
 		SecurityCamera::SecurityCamera(const string& owner_password = "", const string& title = "", const bool online = false, const Date& purchase_date = Date(), const int resolution = 1080, const bool recording = false, const bool motionDetectionEnabled = false)
-			: SmartSmth(owner_password, title, SecCamera, online, purchase_date), isRecording(false), motionDetectionEnabled(true) {
-			setResolution(resolution);
-		}
+			: SmartSmth(owner_password, title, SecCamera, online, purchase_date), isRecording(false), motionDetectionEnabled(true), resolution(resolution) {}
 
 		int SecurityCamera::getResolution() const { return resolution; }
 		bool SecurityCamera::getMotion() const { return motionDetectionEnabled; }
 		bool SecurityCamera::getRecording() const { return isRecording; }
 
-
-		void SecurityCamera::setResolution(const int resolution)
-		{
-			//if (resolution != 720 && resolution != 1080 && resolution != 1440 && resolution != 2160)
-				//throw std::invalid_argument("Resolution must be 720, 1080, 1440, or 2160");
-			this->resolution = resolution;
-		}
-
-		void SecurityCamera::startRecording()
-		{
-			if (isRecording) {
-				//throw std::runtime_error("Camera is already recording");
-			}
-			isRecording = true;
-		}
-
-		void SecurityCamera::stopRecording()
-		{
-			if (!isRecording) {
-				//throw std::runtime_error("Camera is not recording");
-			}
-			isRecording = false;
-		}
-
-		void SecurityCamera::toggleMotionDetection()
-		{
-			motionDetectionEnabled = !motionDetectionEnabled;
-			if (!motionDetectionEnabled && isRecording) {
-				stopRecording();
-			}
-		}
+		//void SecurityCamera::setResolution(const int resolution)
+		//{
+		//	if (resolution != 720 && resolution != 1080 && resolution != 1440 && resolution != 2160)
+		//		throw std::invalid_argument("Resolution must be 720, 1080, 1440, or 2160");
+		//	this->resolution = resolution;
+		//}
 
 		ostream& operator<<(ostream& out, const SecurityCamera& camera)
 		{
@@ -1085,49 +1056,6 @@
 				}
 				}
 			}
-			/*else {
-
-				cout << "Select device type:\n";
-				cout << "1. Smart Light\n";
-				cout << "2. Thermostat\n";
-				cout << "3. Security Camera\n";
-				cout << "Your choice: ";
-
-				int choice;
-				in >> choice;
-
-				switch (choice) {
-				case 1: {
-					SmartLight light;
-					cout << "Enter Smart Light details:\n";
-					in >> light;
-					variant = light;
-					break;
-				}
-				case 2: {
-					Thermostat thermo;
-					cout << "Enter Thermostat details:\n";
-					in >> thermo;
-					variant = thermo;
-					break;
-				}
-				case 3: {
-					SecurityCamera camera;
-					cout << "Enter Security Camera details:\n";
-					in >> camera;
-					variant = camera;
-					break;
-				}
-				default: {
-					cout << "Invalid choice, creating Smart Light by default\n";
-					SmartLight default_device;
-					in >> default_device;
-					variant = default_device;
-					break;
-				}
-				}
-			}
-			return in;*/
 			else {
 				std::visit([&in](auto&& dev) {
 					in >> dev;
@@ -1413,17 +1341,16 @@
 
 		//FileSystem<DeviceVariant>
 
-		void FileSystem<DeviceVariant>::sortF()
+		bool FileSystem<DeviceVariant>::sortF(std::function<bool(const DeviceVariant&, const DeviceVariant&)> comp)
 		{
 			fstream file(file_name, ios::in | ios::out | ios::binary);
 			if (!file.is_open()) {
 				cout << "Файл устройств не найден\n";
-				return;
+				return false;
 			}
 
 			vector<DeviceVariant> devices;
 			DeviceVariant device;
-
 
 			while (file >> device) {
 				devices.push_back(device);
@@ -1432,28 +1359,18 @@
 			if (devices.empty()) {
 				cout << "Файл устройств пуст\n";
 				file.close();
-				return;
+				return false;
 			}
 
-			std::sort(devices.begin(), devices.end(),
-				[](const DeviceVariant& a, const DeviceVariant& b) -> bool {
-					return std::visit([](const auto& dev_a, const auto& dev_b) -> bool {
-						string title_a = dev_a.getTitle();
-						string title_b = dev_b.getTitle();
 
-						std::transform(title_a.begin(), title_a.end(), title_a.begin(), ::tolower);
-						std::transform(title_b.begin(), title_b.end(), title_b.begin(), ::tolower);
-
-						return title_a < title_b;
-						}, a, b);
-				});
+			std::sort(devices.begin(), devices.end(), comp);
 
 			file.close();
 			file.open(file_name, ios::out | ios::trunc | ios::binary);
 
 			if (!file.is_open()) {
 				cout << "Ошибка при открытии файла для записи\n";
-				return;
+				return false;
 			}
 
 			for (const auto& dev : devices) {
@@ -1461,7 +1378,8 @@
 			}
 
 			file.close();
-			cout << "Устройства отсортированы по названию\n";
+			cout << "Устройства отсортированы\n";
+			return true;
 		}
 
 		bool FileSystem<DeviceVariant>::checkDevice(const DeviceVariant& device)
@@ -1716,6 +1634,62 @@
 			return device_to_remove;
 		}
 
+		DeviceVariant FileSystem<DeviceVariant>::editF(int pos, const DeviceVariant& new_device)
+		{
+			if (pos < 1) {
+				throw std::invalid_argument("Позиция должна быть положительным числом");
+			}
+
+			smartFile.open(file_name, ios::in | ios::out | ios::binary);
+			if (!smartFile.is_open()) {
+				throw std::runtime_error("Не удалось открыть файл устройств: " + file_name);
+			}
+
+			smartFile.seekg(0, ios::end);
+			std::streampos fileSize = smartFile.tellg();
+			if (fileSize <= 0) {
+				smartFile.close();
+				throw std::runtime_error("Файл устройств пуст");
+			}
+			smartFile.seekg(0, ios::beg);
+
+			DeviceVariant old_device;
+			int current_pos = 1;
+			std::streampos edit_position = 0;
+
+			while (current_pos < pos) {
+				edit_position = smartFile.tellg();
+
+				DeviceVariant temp;
+				if (!(smartFile >> temp)) {
+					smartFile.close();
+					throw std::runtime_error("Ошибка чтения устройства на позиции " + std::to_string(current_pos));
+				}
+				current_pos++;
+			}
+
+
+			edit_position = smartFile.tellg();
+
+
+			if (!(smartFile >> old_device)) {
+				smartFile.close();
+				throw std::runtime_error("Не удалось прочитать устройство для редактирования на позиции " + std::to_string(pos));
+			}
+
+			smartFile.seekp(edit_position);
+
+
+			smartFile << new_device;
+
+			smartFile.close();
+
+			cout << "Устройство на позиции " << pos << " успешно отредактировано\n";
+			cout << "Возвращаемое старое устройство можно использовать для удаления в сценариях при необходимости\n";
+
+			return old_device;
+		}
+
 		void FileSystem<DeviceVariant>::searchF(const string& dev_name)
 		{
 			std::ifstream file(file_name, ios::binary);
@@ -1746,37 +1720,8 @@
 			}
 		}
 
-		void FileSystem<DeviceVariant>::filterByOnline(bool online)
-		{
-			smartFile.open(file_name, ios::in | ios::binary);
-			if (!smartFile.is_open()) {
-				cout << "Файл устройств не найден\n";
-				return;
-			}
-
-			cout << "=== Устройства в статусе: " << (online ? "онлайн" : "офлайн") << " ===\n";
-			int filtered_count = 0;
-			DeviceVariant device;
-
-			while (smartFile >> device) {
-				bool is_online = std::visit([](const auto& dev) -> bool {
-					return dev.getOnline();
-					}, device);
-
-				if (online == is_online) {
-					cout << device << "\n"; 
-					filtered_count++;
-				}
-			}
-
-			if (filtered_count == 0) {
-				cout << "Устройства не найдены\n";
-			}
-
-			smartFile.close();
-		}
-
-		void FileSystem<DeviceVariant>::filterByDate(const Date& first_date, const Date& second_date)
+		void FileSystem<DeviceVariant>::filter(std::function<bool(const DeviceVariant&)> predicate,
+			const std::string& filter_name)
 		{
 			std::ifstream file(file_name, ios::binary);
 			if (!file.is_open()) {
@@ -1784,56 +1729,34 @@
 				return;
 			}
 
-			// Проверка на пустой файл
 			file.seekg(0, ios::end);
 			if (file.tellg() == 0) {
 				cout << "Файл устройств пуст\n";
+				file.close();
 				return;
 			}
 			file.seekg(0, ios::beg);
 
-			cout << "=== Устройства купленные в период с " << first_date << " по " << second_date << " ===\n";
+			cout << " Фильтр: " << filter_name << " \n";
 			int filtered_count = 0;
-
-	
-			auto isDateInRange = [&](const Date& date) -> bool {
-
-				if (date.getYear() < first_date.getYear()) return false;
-				if (date.getYear() > second_date.getYear()) return false;
-
-				if (date.getYear() == first_date.getYear()) {
-					if (date.getMonth() < first_date.getMonth()) return false;
-					if (date.getMonth() == first_date.getMonth() && date.getDay() < first_date.getDay()) return false;
-				}
-
-				if (date.getYear() == second_date.getYear()) {
-					if (date.getMonth() > second_date.getMonth()) return false;
-					if (date.getMonth() == second_date.getMonth() && date.getDay() > second_date.getDay()) return false;
-				}
-
-				return true;
-				};
-
 			DeviceVariant device;
 
 			while (file >> device) {
-				std::visit([&](const auto& dev) {
-						Date purchase_date = dev.getPurchaseDate();
-						if (isDateInRange(purchase_date)) {
-							cout << "Устройство " << ++filtered_count << ":\n";
-							cout << dev;
-							cout << "------------------------\n";
-						}
-					}
-					, device);
+				if (predicate(device)) {
+					cout << "Устройство " << ++filtered_count << ":\n";
+					cout << device;
+					cout << "------------------------\n";
+				}
 			}
 
 			if (filtered_count == 0) {
-				cout << "Устройства не найдены в указанном диапазоне дат\n";
+				cout << "Устройства не найдены\n";
 			}
 			else {
 				cout << "Найдено устройств: " << filtered_count << "\n";
 			}
+
+			file.close();
 		}
 
 		//FileSystem<DeviceScriptVariant>
@@ -1841,46 +1764,6 @@
 		string FileSystem<DeviceScriptVariant>::getFileName() const { return file_name; }
 
 		FileSystem<DeviceScriptVariant>::FileSystem() { file_name = "device_scripts_storage.dat"; }
-
-		/*void FileSystem<DeviceScriptVariant>::readF(const User& user)
-		{
-			smartFile.open(file_name, ios::in | ios::binary);
-			if (!smartFile.is_open()) {
-				cout << "Файл сценариев не найден или пуст\n";
-				return;
-			}
-
-
-			smartFile.seekg(0, ios::end);
-			if (smartFile.tellg() == 0) {
-				cout << "У вас пока нет сценариев\n";
-				smartFile.close();
-				return;
-			}
-			smartFile.seekg(0, ios::beg);
-
-			cout << "=== Ваши сценарии ===\n";
-			int script_count = 0;
-
-			while (!smartFile.eof()) {
-
-				bool script_found = false;
-
-				DeviceScriptVariant script;
-				smartFile >> script;
-				cout << script;
-
-				if (smartFile.eof()) break;
-			}
-
-			if (!script_count) 
-				cout << "У вас нет сценариев\n";
-			
-			else 
-				cout << "Всего сценариев: " << script_count << "\n";
-
-			smartFile.close();
-		}*/
 
 		void FileSystem<DeviceScriptVariant>::writeF(queue<DeviceScriptVariant>& queue)
 		{
@@ -1905,70 +1788,88 @@
 
 		void FileSystem<DeviceScriptVariant>::removeF(const User& user)
 		{
-
-			smartFile.open(file_name, ios::in | ios::binary);
-			if (!smartFile.is_open()) {
+			fstream file(file_name, ios::in | ios::out | ios::binary);
+			if (!file.is_open()) {
 				cout << "Файл сценариев не найден\n";
 				return;
 			}
 
-			smartFile.seekg(0, ios::end);
-			if (smartFile.tellg() == 0) {
+			file.seekg(0, ios::end);
+			std::streampos fileSize = file.tellg();
+			if (fileSize <= 0) {
 				cout << "Файл сценариев пуст\n";
-				smartFile.close();
+				file.close();
 				return;
 			}
-			smartFile.seekg(0, ios::beg);
+			file.seekg(0, ios::beg);
 
-			std::vector<DeviceScriptVariant> remaining_scripts;
 			int removed_count = 0;
+			std::streampos read_pos = 0;
+			std::streampos write_pos = 0;
 
-			while (!smartFile.eof()) {
+			while (read_pos < fileSize) {
+				file.seekg(read_pos);
 				DeviceScriptVariant script;
-				smartFile >> script;
 
-				if (smartFile.good()) {
-					bool belongs_to_user = false;
-					std::visit([&user, &belongs_to_user](const auto& scr) {
-						auto device = scr.getDevice();
-						if (device.getPassword() == user.getPassword()) {
-							belongs_to_user = true;
-						}
-						}, script);
+				if (!(file >> script)) {
 
-					if (belongs_to_user) {
-						removed_count++;
+					read_pos += static_cast<std::streamoff>(1);
+					continue;
+				}
+
+				std::streampos after_read = file.tellg();
+				if (after_read <= read_pos) {
+					break;
+				}
+
+				bool belongs_to_user = false;
+				std::visit([&user, &belongs_to_user](const auto& scr) {
+					auto device = scr.getDevice();
+					if (device.getPassword() == user.getPassword()) {
+						belongs_to_user = true;
 					}
-					else {
-						remaining_scripts.push_back(script);
-					}
+					}, script);
+
+				if (belongs_to_user) {
+
+					removed_count++;
+					read_pos = after_read;
 				}
 				else {
-					if (!smartFile.eof()) {
-						smartFile.clear();
-						smartFile.ignore(1024, '\n');
-					}
-				}
 
-				if (smartFile.eof()) break;
+					if (write_pos != read_pos) {
+
+						file.seekg(read_pos);
+						file.seekp(write_pos);
+
+
+						std::streamsize block_size = after_read - read_pos;
+						std::vector<char> buffer(block_size);
+
+						file.seekg(read_pos);
+						file.read(buffer.data(), block_size);
+
+						file.seekp(write_pos);
+						file.write(buffer.data(), block_size);
+					}
+
+
+					write_pos += (after_read - read_pos);
+					read_pos = after_read;
+				}
 			}
-			smartFile.close();
+
+			file.close();
 
 			if (removed_count == 0) {
 				cout << "Сценарии пользователя " << user.getUserName() << " не найдены\n";
 				return;
 			}
 
-			smartFile.open(file_name, ios::out | ios::binary | ios::trunc);
-			if (!smartFile.is_open()) {
-				throw runtime_error("Не удалось открыть файл сценариев для перезаписи");
+			if (write_pos < fileSize) {
+				std::filesystem::resize_file(file_name, write_pos);
 			}
 
-			for (const auto& script : remaining_scripts) {
-				smartFile << script;
-			}
-
-			smartFile.close();
 			cout << "Удалено сценариев пользователя " << user.getUserName() << ": " << removed_count << "\n";
 		}
 
@@ -2083,7 +1984,7 @@
 				return;
 			}
 
-			cout << "=== Очередь сценариев ===\n";
+			cout << " Очередь сценариев \n";
 			cout << "Всего сценариев: " << script_subsequence.size() << "\n\n";
 
 			std::queue<DeviceScriptVariant> temp_queue = script_subsequence;
@@ -2096,15 +1997,13 @@
 			}
 		}
 
-		bool SmartHomeInteraction::hasUser() { return current_user != nullptr; }
-
 		DeviceVariant SmartHomeInteraction::chooseDevice()
 		{
 			bool is_running = true;
 			while (is_running)
 			{
 				showDeviceCatalogHeaderMenu();
-				std::cout << "" << std::endl;
+				std::cout << "Выберите тип устройства:" << std::endl;
 				short choice;
 				while (true) {
 					cin >> choice;
@@ -2234,7 +2133,16 @@
 				}
 				case 5:
 				{
-					device_file.sortF();
+					/*device_file.sortF();*/
+					device_file.sortF([](const DeviceVariant& a, const DeviceVariant& b) -> bool {
+						return std::visit([](const auto& dev_a, const auto& dev_b) -> bool {
+							string title_a = dev_a.getTitle();
+							string title_b = dev_b.getTitle();
+							std::transform(title_a.begin(), title_a.end(), title_a.begin(), ::tolower);
+							std::transform(title_b.begin(), title_b.end(), title_b.begin(), ::tolower);
+							return title_a < title_b;
+							}, a, b);
+						});
 					break;
 				}
 				case 6:
@@ -2267,16 +2175,44 @@
 							break;
 						}
 					}
-					device_file.filterByOnline(isOnline);
+					device_file.filter(
+						[isOnline](const DeviceVariant& device) -> bool {
+							bool device_online = std::visit([](const auto& dev) -> bool {
+								return dev.getOnline();
+								}, device);
+							return isOnline == device_online;
+						},
+						"Статус: " + std::string(isOnline ? "онлайн" : "офлайн")
+					);
 					break;
 				}
 				case 9:
 				{
-					// проверка на даты f>s
 					Date first_date, second_date;
 					cout << "Введите первую дату:" << endl;
-					cin >> first_date >> second_date;
-					device_file.filterByDate(first_date, second_date);
+					cin >> first_date;
+					cout << "Введите вторую дату:" << endl;
+					cin >> second_date;
+					if (second_date < first_date || second_date == first_date)
+					{
+						cout << "Вторая дата не может быть раньше или равна первой." << endl;
+						break;
+					}
+					device_file.filter(
+						[first_date, second_date](const DeviceVariant& device) -> bool {
+							Date purchase_date = std::visit([](const auto& dev) -> Date {
+								return dev.getPurchaseDate();
+								}, device);
+							return !(purchase_date < first_date) && !(second_date < purchase_date);
+						},
+						"Период с " +
+						std::to_string(first_date.getYear()) + "-" +
+						std::to_string(first_date.getMonth()) + "-" +
+						std::to_string(first_date.getDay()) + " по " +
+						std::to_string(second_date.getYear()) + "-" +
+						std::to_string(second_date.getMonth()) + "-" +
+						std::to_string(second_date.getDay())
+					);
 					break;
 				}
 				case 10:
@@ -2453,6 +2389,9 @@
 				case 1:
 				{
 					showAuthorMenu();
+					auto user = make_shared<User>();
+					user->setRole(Guest_);
+					current_user = user;
 					break;
 				}
 				case 2:
@@ -2592,8 +2531,9 @@
 						getline(cin, attempt_name);
 
 						attempt_password = getPasswordWithDots();
-
+						
 						current_user->setUserName(attempt_name);
+						attempt_password = hashPassword(current_user->getUserName(),attempt_password);
 						current_user->setPassword(attempt_password);
 
 						showLoginMenu();

@@ -14,6 +14,8 @@
 #include <variant>
 #include <conio.h>
 #include <filesystem>
+#include <functional>
+#include <cctype> 
 
 #define SIZE_BUFF 64
 #define OpenFileERROR "There's the OPEN_FILE ERROR..."
@@ -56,8 +58,7 @@ namespace smart_system
 		friend ostream& operator<<(ostream& out, const Date& date);
 		friend istream& operator>>(istream& in, Date& date);
 		friend bool operator==(const Date& lhs, const Date& rhs);
-
-
+		friend bool operator<(const Date& lhs, const Date& rhs);
 	public:
 		Date(); 
 		Date(const unsigned short year, const short month, const short day);//+~
@@ -83,7 +84,7 @@ namespace smart_system
 		char title[SIZE_BUFF];
 		SmartType anyType;
 		bool isOnline;
-		Date purchase_date;
+		Date release_date;
 		friend ostream& operator<<(ostream& out, const SmartSmth& device);
 		friend istream& operator>>(istream& in, SmartSmth& device);
 		friend bool operator==(const SmartSmth& lhs, const SmartSmth& rhs);
@@ -134,7 +135,7 @@ namespace smart_system
 		friend bool operator==(const User& lhs, const User& rhs);
 	public:
 		User(const string& username, const string& password, const UserLocation& location, const Date& date, UserRole role);
-		string hashPassword(const string& password);
+		friend string hashPassword(const string& user_name,const string& password);
 		void setRole(const UserRole& anyRole);
 		void setUserDate(const Date& date);
 		void setUserLocation(const UserLocation& location);
@@ -157,7 +158,7 @@ namespace smart_system
 		friend bool operator==(const SmartLight& lhs, const SmartLight& rhs);
 	public:
 		SmartLight(const string& owner_password, const string& title, const bool online, const Date& purchase_date, const int brightness, const string& color);
-		int getBright() const;
+		int getBrightness() const;
 		string getColor() const;
 		void setBrightness(const int brightness);
 		void setColor(const string& color);
@@ -173,7 +174,7 @@ namespace smart_system
 		friend bool operator==(const Thermostat& lhs, const Thermostat& rhs);
 	public:
 		Thermostat(const string& owner_password, const string& title, const bool online, const Date& purchase_date, const double currentTemperature, const double targetTemperature, const string& mode);
-
+		string getMode() const;
 		double getCurTemperature() const;
 		double getTargetTemperature() const;
 		void setTargetTemperature(double temp);
@@ -196,10 +197,7 @@ namespace smart_system
 		int getResolution() const;
 		bool getMotion() const;
 
-		void setResolution(const int resolution);
-		void startRecording();
-		void stopRecording();
-		void toggleMotionDetection();
+		//void setResolution(const int resolution);
 	};
 
 	template<smartDeviceType T>
@@ -304,13 +302,12 @@ namespace smart_system
 		int readF();
 		DeviceVariant chooseCertainDevice(const int count);
 		void writeF(const DeviceVariant& device);
-		void editF(const DeviceVariant& device);
+		/*void editF(const DeviceVariant& device);*/
+		DeviceVariant editF(int pos,const DeviceVariant& new_device);
 		void searchF(const string& dev_name);
-		void filterByOnline(bool online);
-		void filterByDate(const Date& first_date, const Date& second_date);
-		//void removeF(const DeviceVariant& device);
+		void filter(std::function<bool(const DeviceVariant&)> predicate, const std::string& filter_name);
 		DeviceVariant removeF(int pos);
-		void sortF();
+		bool sortF(std::function<bool(const DeviceVariant&, const DeviceVariant&)> comp);
 		FileSystem();
 		void setFileName(const string& file_name);
 		~FileSystem() = default;
@@ -325,6 +322,7 @@ namespace smart_system
 		string file_name;
 	/*	friend void operator<<(ostream& out, FileSystem&);*/
 	public:
+		User chooseUser(const string& name);
 		short checkUser(User& user_to_check);
 		void readF(const User& user);
 		void readF(UserRole role, const User& user);
@@ -360,6 +358,8 @@ namespace smart_system
 	{
 		/*		void setFormat(); */// setf флаги формат.
 		static void removeScript(const DeviceVariant& device);
+		static bool showAccountMenu();
+		static bool showAdminOperationsMenu();
 		static shared_ptr<User> current_user;
 		static std::queue<DeviceScriptVariant> script_subsequence;
 		static DeviceVariant chooseDevice();
@@ -371,13 +371,13 @@ namespace smart_system
 		static void showAuthorMenu();
 		static void showSmartHomeMenu();
 		static void showDeviceCatalogHeaderMenu();
+		static void showSHOHeaderMenu();
 		static void showRoleHeaderMenu();
 		static void showRegistrationMenu();
 		static void showLoginMenu();
 		static FileSystem<DeviceVariant> device_file;
 		static FileSystem<DeviceScriptVariant> script_file;
 		static FileSystem<User> user_file;
-		static bool hasUser();
 	public:
 		~SmartHomeInteraction() = default;
 		SmartHomeInteraction() = default; 

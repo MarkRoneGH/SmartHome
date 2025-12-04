@@ -1,0 +1,102 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<ClassDiagram MajorVersion="1" MinorVersion="1">
+  <Class Name="smart_system::FileSystem&lt;DeviceVariant&gt;">
+    <Position X="13" Y="0.5" Width="2.25" />
+    <TypeIdentifier>
+      <HashCode>BAAAAAyAAAAAAQAAAABAAACQkCAAAAYACQBAAAAAAAA=</HashCode>
+      <FileName>prototype.h</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="smart_system::SmartSmth">
+    <Position X="2.75" Y="0.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAQ4AABEgAAAAJEIAAAwEAQAAAAAAAAAAAAIA=</HashCode>
+      <FileName>prototype.h</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="smart_system::User">
+    <Position X="5.25" Y="5.25" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAIBAAAYAAABAACABAAIAgECgAAABAAAAAABAAAYAIA=</HashCode>
+      <FileName>prototype.h</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="smart_system::Thermostat">
+    <Position X="5" Y="1.75" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAACAAAQAAAAAACAAIYAAQAAAAAAAAAAAABAAAAAAAg=</HashCode>
+      <FileName>prototype.h</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="smart_system::SmartLight">
+    <Position X="0.5" Y="1.75" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAEAAAQAAAAAAAAAAAICAAAAAgAAKAAA=</HashCode>
+      <FileName>prototype.h</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="smart_system::SecurityCamera">
+    <Position X="2.75" Y="5.25" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAACAIAAAAEAAAAACgAQQgAgACIAAAAAAAAAAA=</HashCode>
+      <FileName>prototype.h</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="smart_system::SmartHomeInteraction">
+    <Position X="9.75" Y="4.25" Width="2.5" />
+    <TypeIdentifier>
+      <HashCode>CAEAgCQAAgFAACAABgAgABAIAAAAABAoIAQAEAAwAFA=</HashCode>
+      <FileName>prototype.h</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="smart_system::Date">
+    <Position X="7.5" Y="0.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>EAAEAAAAIAAAAAAAEAAEQAAAAAQAAgABCAAAAAYCQAA=</HashCode>
+      <FileName>prototype.h</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="smart_system::UserLocation">
+    <Position X="9.25" Y="0.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAgAAAAAAAiAAAAACAAACAAAAAAAEgACAAAAAAAAgAA=</HashCode>
+      <FileName>prototype.h</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="smart_system::DeviceScript&lt;T&gt;">
+    <Position X="11" Y="0.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>ACAAAAIAAAAAICAAAAAAAAACKAAAAABCAAAAAAAAAAA=</HashCode>
+      <FileName>prototype.h</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="smart_system::FileSystem&lt;User&gt;">
+    <Position X="7.5" Y="5.25" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAACAAiAAAAAAAAAAABAAAAAECAAAAIICQAAAAAAAAA=</HashCode>
+      <FileName>prototype.h</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="smart_system::FileSystem&lt;DeviceScriptVariant&gt;">
+    <Position X="12.75" Y="5.25" Width="2.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAiAAAAAAAAAAABAAAAgECAAAAAACQAAAAAAAAA=</HashCode>
+      <FileName>prototype.h</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Enum Name="smart_system::SmartType">
+    <Position X="0.5" Y="5.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAAAAACAgAAACAAAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>prototype.h</FileName>
+    </TypeIdentifier>
+  </Enum>
+  <Enum Name="smart_system::UserRole">
+    <Position X="0.5" Y="7" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAAAAAAAQAAAAAAAAAAAIAAAAAAAAg=</HashCode>
+      <FileName>prototype.h</FileName>
+    </TypeIdentifier>
+  </Enum>
+  <Font Name="Segoe UI" Size="9" />
+</ClassDiagram>

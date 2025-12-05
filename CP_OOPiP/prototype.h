@@ -62,8 +62,8 @@ namespace smart_system
 	public:
 		Date(); 
 		Date(const unsigned short year, const short month, const short day);//+~
-		bool isLeapYear(const unsigned short year) const;//+
-		bool validDate(const unsigned short year, const short month, const short day) const;//+
+		//bool isLeapYear(const unsigned short year) const;//+
+		//bool validDate(const unsigned short year, const short month, const short day) const;//+
 
 		void setYear(const unsigned short year);//+ 
 		void setMonth(const short month);//+
@@ -196,8 +196,6 @@ namespace smart_system
 		bool getRecording() const;
 		int getResolution() const;
 		bool getMotion() const;
-
-		//void setResolution(const int resolution);
 	};
 
 	template<smartDeviceType T>
@@ -287,9 +285,9 @@ namespace smart_system
 		std::string getScript() const;
 		void setScript(const string& script);
 		void setDuration(const short duration);
+		void setDevice(const T& smart_device);
 	};
 	
-
 
 	template<>
 	class FileSystem<DeviceVariant>
@@ -302,8 +300,7 @@ namespace smart_system
 		int readF();
 		DeviceVariant chooseCertainDevice(const int count);
 		void writeF(const DeviceVariant& device);
-		/*void editF(const DeviceVariant& device);*/
-		DeviceVariant editF(int pos,const DeviceVariant& new_device);
+		void editF(const DeviceVariant& old_device,const DeviceVariant& new_device);
 		void searchF(const string& dev_name);
 		void filter(std::function<bool(const DeviceVariant&)> predicate, const std::string& filter_name);
 		DeviceVariant removeF(int pos);
@@ -320,14 +317,11 @@ namespace smart_system
 	{
 		fstream smartFile;
 		string file_name;
-	/*	friend void operator<<(ostream& out, FileSystem&);*/
 	public:
 		User chooseUser(const string& name);
 		short checkUser(User& user_to_check);
-		void readF(const User& user);
-		void readF(UserRole role, const User& user);
+		void readF();
 		void writeF(const User& user);
-		//void removeF(const User& user);
 		void removeF(const User& user);
 		FileSystem();
 		
@@ -340,17 +334,14 @@ namespace smart_system
 	{
 		fstream smartFile;
 		string file_name;
-		//friend void operator<<(ostream& out, FileSystem&);
 	public:
-		//void readF(const User& user);
-		//void readF(UserRole role, const User& user);
+
 		std::queue<DeviceScriptVariant> unloadScripts(const User& user);
 		void writeF(queue<DeviceScriptVariant>& queue);
 		void removeF(const User& user);
 		FileSystem();
 		~FileSystem() = default;
 		string getFileName() const;
-		//void searchF(const DeviceScriptVariant& dev_script);
 
 	};
 
@@ -359,10 +350,11 @@ namespace smart_system
 		/*		void setFormat(); */// setf флаги формат.
 		static void removeScript(const DeviceVariant& device);
 		static bool showAccountMenu();
-		static bool showAdminOperationsMenu();
+		static void showAdminOperationsMenu();
 		static shared_ptr<User> current_user;
 		static std::queue<DeviceScriptVariant> script_subsequence;
 		static DeviceVariant chooseDevice();
+		static DeviceVariant chooseDevice(SmartType type);
 		static void printScripts();
 		static void showUserMenu();
 		static void showAdminMenu();
@@ -372,6 +364,7 @@ namespace smart_system
 		static void showSmartHomeMenu();
 		static void showDeviceCatalogHeaderMenu();
 		static void showSHOHeaderMenu();
+		static void generateUserReport();
 		static void showRoleHeaderMenu();
 		static void showRegistrationMenu();
 		static void showLoginMenu();

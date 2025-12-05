@@ -184,19 +184,19 @@
 		short Date::getMonth() const { return month_; }
 		unsigned short Date::getYear() const { return year_; }
 
-		bool Date::isLeapYear(const unsigned short year) const
+		bool isLeapYear(const unsigned short year)
 		{
-			if (year_ % 400 == 0)
+			if (year % 400 == 0)
 				return true;
-			else if (year_ % 100 == 0)
+			else if (year % 100 == 0)
 				return false;
-			else if (year_ % 4 == 0)
+			else if (year % 4 == 0)
 				return true;
 			else
 				return false;
 		}
 
-		bool Date::validDate(const unsigned short year, const short month, const short day) const
+		bool validDate(const unsigned short year, const short month, const short day)
 		{
 			if (year < 1940 || year > 2025)
 			{
@@ -337,7 +337,7 @@
 						}
 					}
 
-					if (date.validDate(date.year_, date.month_, date.day_)) {
+					if (validDate(date.year_, date.month_, date.day_)) {
 						valid_date = true;
 					}
 					else {
@@ -515,9 +515,9 @@
 
 		void User::setUserName(const string& user_name)
 		{
-			if (user_name.length() >= SIZE_BUFF) {
-				throw std::invalid_argument("Неверное значение название smart-девайса.");
-			}
+			//if (user_name.length() >= SIZE_BUFF) {
+			//	throw std::invalid_argument("Неверное значение название smart-девайса.");
+			//}
 			strncpy_s(this->user_name, user_name.c_str(), SIZE_BUFF - 1);
 			this->user_name[SIZE_BUFF - 1] = '\0';
 		}
@@ -643,17 +643,13 @@
 		void SmartLight::setBrightness(const int brightness)
 		{
 			if (brightness_ < 0 || brightness_ > 100)
-
-				//throw std::invalid_argument("Brightness must be between 0 and 100");
+			{ }
 
 			brightness_ = brightness_;
 		}
 
-		void SmartLight::setColor(const string& newColor) {
-			if (newColor.length() >= SIZE_BUFF)
-			{
-				throw std::invalid_argument("Invalid color value");
-			}
+		void SmartLight::setColor(const string& newColor) 
+		{
 			strncpy_s(color, newColor.c_str(), SIZE_BUFF - 1);
 			color[SIZE_BUFF - 1] = '\0';
 		}
@@ -755,7 +751,7 @@
 
 		void Thermostat::setTargetTemperature(double temp) {
 			if (temp < -50.0 || temp > 50.0) {
-				//throw std::invalid_argument("Temperature must be between -50°C and 50°C");
+
 			}
 			targetTemperature = temp;
 		}
@@ -770,7 +766,7 @@
 		void Thermostat::setMode(const string& newMode)
 		{
 			if (newMode.length() >= SIZE_BUFF) {
-				throw std::invalid_argument("Неверное значение режима.");
+				
 			}
 			strncpy_s(mode, newMode.c_str(), SIZE_BUFF - 1);
 		}
@@ -897,13 +893,6 @@
 		int SecurityCamera::getResolution() const { return resolution; }
 		bool SecurityCamera::getMotion() const { return motionDetectionEnabled; }
 		bool SecurityCamera::getRecording() const { return isRecording; }
-
-		//void SecurityCamera::setResolution(const int resolution)
-		//{
-		//	if (resolution != 720 && resolution != 1080 && resolution != 1440 && resolution != 2160)
-		//		throw std::invalid_argument("Resolution must be 720, 1080, 1440, or 2160");
-		//	this->resolution = resolution;
-		//}
 
 		ostream& operator<<(ostream& out, const SecurityCamera& camera)
 		{
@@ -1117,6 +1106,12 @@
 			}*/
 			strncpy(this->script, script.c_str(), SIZE_BUFF - 1);
 			this->script[SIZE_BUFF - 1] = '\0';
+		}
+
+		template<smartDeviceType T>
+		void DeviceScript<T>::setDevice(const T& smart_device)
+		{
+			this->smart_device = smart_device;
 		}
 
 		template<smartDeviceType T>
@@ -1521,21 +1516,7 @@
 
 			if (!smartFile.is_open()) {
 				throw std::runtime_error("Не удалось открыть файл для записи: " + file_name);
-			}/*
-
-			std::visit([this](const auto& dev) {
-				using T = std::decay_t<decltype(dev)>;
-
-				if constexpr (std::is_same_v<T, SmartLight>) {
-					smartFile << dev;
-				}
-				else if constexpr (std::is_same_v<T, Thermostat>) {
-					smartFile << dev;
-				}
-				else if constexpr (std::is_same_v<T, SecurityCamera>) {
-					smartFile << dev;
-				}
-				}, device);*/
+			}
 
 			smartFile << device;
 
@@ -1634,7 +1615,7 @@
 			return device_to_remove;
 		}
 
-		DeviceVariant FileSystem<DeviceVariant>::editF(int pos, const DeviceVariant& new_device)
+		/*DeviceVariant FileSystem<DeviceVariant>::editF(int pos, const DeviceVariant& new_device)
 		{
 			if (pos < 1) {
 				throw std::invalid_argument("Позиция должна быть положительным числом");
@@ -1688,6 +1669,146 @@
 			cout << "Возвращаемое старое устройство можно использовать для удаления в сценариях при необходимости\n";
 
 			return old_device;
+		}*/
+
+		/*DeviceVariant FileSystem<DeviceVariant>::editF(const DeviceVariant& old_device, const DeviceVariant& new_device)
+		{
+			if (pos < 1) {
+				throw std::invalid_argument("Позиция должна быть положительным числом");
+			}
+
+			std::ifstream inFile(file_name, std::ios::binary);
+			if (!inFile.is_open()) {
+				throw std::runtime_error("Не удалось открыть файл устройств: " + file_name);
+			}
+
+			std::string temp_file_name = file_name + ".tmp";
+			std::ofstream outFile(temp_file_name, std::ios::binary);
+			if (!outFile.is_open()) {
+				inFile.close();
+				throw std::runtime_error("Не удалось создать временный файл");
+			}
+
+			DeviceVariant old_device;
+			int current_pos = 0;
+			bool device_found = false;
+
+			while (inFile.peek() != EOF) {
+				current_pos++;
+
+				if (current_pos == pos) {
+
+					inFile >> old_device;
+
+					if (!inFile.good() && !inFile.eof()) {
+						inFile.close();
+						outFile.close();
+						std::filesystem::remove(temp_file_name);
+						throw std::runtime_error("Ошибка чтения устройства на позиции " + std::to_string(pos));
+					}
+
+					device_found = true;
+					outFile << new_device;
+
+					if (!outFile.good()) {
+						inFile.close();
+						outFile.close();
+						std::filesystem::remove(temp_file_name);
+						throw std::runtime_error("Ошибка записи нового устройства во временный файл");
+					}
+				}
+				else {
+
+					DeviceVariant device;
+					inFile >> device;
+
+					if (!inFile.good() && !inFile.eof()) {
+						inFile.close();
+						outFile.close();
+						std::filesystem::remove(temp_file_name);
+						throw std::runtime_error("Ошибка чтения устройства на позиции " + std::to_string(current_pos));
+					}
+
+					outFile << device;
+
+					if (!outFile.good()) {
+						inFile.close();
+						outFile.close();
+						std::filesystem::remove(temp_file_name);
+						throw std::runtime_error("Ошибка записи устройства во временный файл");
+					}
+				}
+			}
+
+			inFile.close();
+			outFile.close();
+
+			if (!device_found) {
+				std::filesystem::remove(temp_file_name);
+				throw std::runtime_error("Устройство на позиции " + std::to_string(pos) + " не найдено");
+			}
+
+
+				std::filesystem::copy(temp_file_name, file_name, std::filesystem::copy_options::overwrite_existing);
+				std::filesystem::remove(temp_file_name);
+		
+			std::cout << "Устройство на позиции " << pos << " успешно отредактировано\n";
+			return old_device;
+		}*/
+
+		void FileSystem<DeviceVariant>::editF(const DeviceVariant& old_device, const DeviceVariant& new_device)
+		{
+
+			smartFile.open(file_name, ios::in | ios::binary);
+			if (!smartFile.is_open())
+			{
+				throw runtime_error(OpenFileERROR);
+			}
+
+			string temp_file_name = "temp_" + file_name;
+			ofstream tempFile(temp_file_name, ios::out | ios::binary);
+			if (!tempFile.is_open())
+			{
+				smartFile.close();
+				throw runtime_error("Не удалось создать временный файл.");
+			}
+
+			bool found = false;
+			DeviceVariant current_device;
+
+			while (smartFile >> current_device)
+			{
+				if (!found && current_device == old_device)
+				{
+					found = true;
+					tempFile << new_device;
+				}
+				else
+				{
+
+					tempFile << current_device;
+				}
+			}
+
+			smartFile.close();
+			tempFile.close();
+
+			if (found)
+			{
+				if (!filesystem::remove(file_name))
+				{
+					filesystem::remove(temp_file_name);
+					throw runtime_error("Не удалось удалить старый файл.");
+				}
+
+				filesystem::rename(temp_file_name, file_name);
+				return;
+			}
+			else
+			{
+				filesystem::remove(temp_file_name);
+				throw runtime_error("Устройство не найдено во время операции редактирования.");
+			}
 		}
 
 		void FileSystem<DeviceVariant>::searchF(const string& dev_name)
@@ -1698,7 +1819,7 @@
 				return;
 			}
 
-			cout << "=== Результаты поиска: '" << dev_name << "' ===\n";
+			cout << "Результаты поиска: '" << dev_name << "' \n";
 			int found_count = 0;
 			DeviceVariant device;
 
@@ -2045,27 +2166,180 @@
 			}
 		}
 
+		DeviceVariant SmartHomeInteraction::chooseDevice(SmartType type)
+		{
+
+			switch (type)
+			{
+			case Light:
+			{
+				SmartLight light;
+				return light;
+			}
+			case Thermo:
+			{
+				Thermostat thermo;
+				return thermo;
+			}
+			case SecCamera:
+			{
+				SecurityCamera camera;
+				return camera;
+			}
+			default:
+				throw runtime_error("Неверный тип устройства");
+			}
+		}
+
+		void SmartHomeInteraction::showSHOHeaderMenu()
+		{
+			cout << "Меню SmartHome:" << endl
+				<< "--> 1. Добавление устройства на аккаунт." << endl
+				<< "--> 2. Редактирование устройства." << endl
+				<< "--> 3. Удаление устройства." << endl
+				<< "--> 4. Посмотреть информацию о смарт-устройствах." << endl
+				<< "--> 5. Сортировка устройств (по названию)." << endl
+				<< "--> 6. Поиск устройств (по названию)." << endl
+				<< "--> 7. Создание отчета." << endl
+				<< "--> 8. Фильтрация устройств (online)." << endl
+				<< "--> 9. Фильтрация устройств (по дате)." << endl
+				<< "--> 10. Создание сценария." << endl
+				<< "--> 11. Удаление сценария." << endl
+				<< "--> 12. Редактирование сценария." << endl
+				<< "--> 13. Посмотреть информацию о всех сценариях." << endl
+				<< "--> 0. Выход..." << endl << ">>";
+		}
+
+		/*void SmartHomeInteraction::generateUserReport()
+		{
+			string report_filename = current_user->getUserName() + "_smart_home_report.txt";
+			ofstream report_file(report_filename, ios::out | ios::trunc);
+
+			if (!report_file.is_open())
+				throw runtime_error("Не удалось создать файл отчета: " + report_filename);
+
+			report_file << "=============================================\n";
+			report_file << "          ОТЧЕТ УМНОГО ДОМА\n";
+			report_file << "=============================================\n\n";
+
+
+			report_file << "ИНФОРМАЦИЯ О ПОЛЬЗОВАТЕЛЕ:\n";
+			report_file << "============================\n";
+			report_file << current_user << "\n";
+
+			report_file << "УСТРОЙСТВА (" << devices.size() << "):\n";
+			report_file << "============================\n";
+
+			if (device.empty())
+			{
+				report_file << "Нет подключенных устройств\n";
+			}
+			else
+			{
+				int device_number = 1;
+				for (const auto& device : devices)
+				{
+					report_file << "\nУстройство #" << device_number++ << ":\n";
+					report_file << device;
+					report_file << "----------------------------------------\n";
+				}
+			}
+
+			report_file << "\nАКТИВНЫЕ СЦЕНАРИИ:\n";
+			report_file << "============================\n";
+
+			auto scripts_copy = script_subsequence;
+			if (scripts_copy.empty())
+			{
+				report_file << "Нет активных сценариев\n";
+			}
+			else
+			{
+				int script_number = 1;
+				while (!scripts_copy.empty())
+				{
+					report_file << "\nСценарий #" << script_number++ << ":\n";
+					report_file << scripts_copy.front();
+					report_file << "----------------------------------------\n";
+					scripts_copy.pop();
+				}
+			}
+
+			report_file << "\nСТАТИСТИКА:\n";
+			report_file << "============================\n";
+			report_file << "Всего устройств: " << devices.size() << "\n";
+
+
+			int lights_count = 0, thermos_count = 0, cameras_count = 0;
+			int online_count = 0;
+
+			for (const auto& device : devices)
+			{
+
+				SmartType type = visit([](auto&& arg) {
+					return arg.getType();
+					}, device);
+
+
+				switch (type)
+				{
+				case SmartType::Light:
+					lights_count++;
+					break;
+				case SmartType::Thermo:
+					thermos_count++;
+					break;
+				case SmartType::SecCamera:
+					cameras_count++;
+					break;
+				}
+
+
+				if (std::visit([](auto&& arg) { return arg.getOnline(); }, device))
+				{
+					online_count++;
+				}
+			}
+
+			report_file << "  • Умных ламп: " << lights_count << "\n";
+			report_file << "  • Термостатов: " << thermos_count << "\n";
+			report_file << "  • Камер безопасности: " << cameras_count << "\n";
+			report_file << "Активных сценариев: " << script_subsequence.size() << "\n";
+
+			if (!devices.empty())
+			{
+				double online_percent = (online_count * 100.0) / devices.size();
+				report_file << "Устройств онлайн: " << online_count << " из " << devices.size()
+					<< " (" << fixed << setprecision(1) << online_percent << "%)\n";
+			}
+			else
+			{
+				report_file << "Устройств онлайн: 0 из 0 (0.0%)\n";
+			}
+
+			time_t now = time(0);
+			tm* local_time = localtime(&now);
+			report_file << "\nОтчет сгенерирован: "
+				<< (local_time->tm_year + 1900) << "-"
+				<< setw(2) << setfill('0') << (local_time->tm_mon + 1) << "-"
+				<< setw(2) << setfill('0') << local_time->tm_mday << " "
+				<< setw(2) << setfill('0') << local_time->tm_hour << ":"
+				<< setw(2) << setfill('0') << local_time->tm_min << ":"
+				<< setw(2) << setfill('0') << local_time->tm_sec << "\n";
+
+			report_file << "=============================================\n";
+
+			report_file.close();
+			cout << "Отчет успешно сохранен в файл: " << report_filename << "\n";
+		}*/
+
 		void SmartHomeInteraction::showSmartHomeMenu()
 		{
 			bool is_running = true;
 			short choice;
 			while (is_running)
 			{
-				cout << "Меню SmartHome:" << endl
-					<< "--> 1. Добавление устройства на аккаунт." << endl
-					<< "--> 2. Редактирование устройства." << endl
-					<< "--> 3. Удаление устройства." << endl
-					<< "--> 4. Посмотреть информацию о смарт-устройствах." << endl
-					<< "--> 5. Сортировка устройств (по названию)." << endl
-					<< "--> 6. Поиск устройств (по названию)." << endl
-					<< "--> 7. Создание отчета." << endl
-					<< "--> 8. Фильтрация устройств (online)." << endl
-					<< "--> 9. Фильтрация устройств (по дате)." << endl
-					<< "--> 10. Создание сценария." << endl
-					<< "--> 11. Удаление сценария." << endl
-					<< "--> 12. Редактирование сценария." << endl
-					<< "--> 13. Посмотреть информацию о всех сценариях." << endl
-					<< "--> 0. Выход..." << endl << ">>";
+				showSHOHeaderMenu();
 				while (is_running) {
 					cin >> choice;
 					if (cin.fail()) {
@@ -2103,6 +2377,69 @@
 				}
 				case 2:
 				{
+					int count = device_file.readF();
+					if (!count) {
+						cout << "У вас нет устройств для редактирования\n";
+						break;
+					}
+					cout << "Выбор устройства для редактирования (1-" << count << ")." << endl;
+					auto old_device = device_file.chooseCertainDevice(count);
+
+					SmartType device_type = std::visit([](auto&& dev) -> SmartType {
+						return dev.getType();
+						}, old_device);
+
+					auto new_device = chooseDevice(device_type);
+					cout << "Введите новые данные для устройства:\n";
+					cin >> new_device;
+
+					string user_password = current_user->getPassword();
+					std::visit([user_password](auto&& dev) {
+						dev.setPassword(user_password);
+						}, new_device);
+					if (device_file.checkDevice(new_device))
+					{
+						cout << "Данное устройство уже существует на вашем аккаунте." << endl;
+						break;
+					}
+					device_file.editF(old_device, new_device);
+
+					if (!script_subsequence.empty())
+					{
+						std::queue<DeviceScriptVariant> updated_queue;
+						bool scripts_updated = false;
+
+						while (!script_subsequence.empty())
+						{
+							DeviceScriptVariant script = script_subsequence.front();
+							script_subsequence.pop();
+
+
+							bool updated = std::visit([&old_device, &new_device](auto& script_obj) -> bool {
+
+								auto device_in_script = script_obj.getDevice();
+
+
+								if (device_in_script == old_device)
+								{
+									using ScriptDeviceType = std::decay_t<decltype(device_in_script)>;
+									ScriptDeviceType new_device_concrete = std::get<ScriptDeviceType>(new_device);
+									script_obj.setDevice(new_device_concrete);
+									return true;
+								}
+								return false;
+								}, script);
+
+							if (updated) scripts_updated = true;
+							updated_queue.push(script);
+						}
+
+						script_subsequence = updated_queue;
+
+						if (scripts_updated)
+							cout << "Сценарии обновлены с новым устройством.\n";
+						
+					}
 
 					break;
 				}
@@ -2133,7 +2470,6 @@
 				}
 				case 5:
 				{
-					/*device_file.sortF();*/
 					device_file.sortF([](const DeviceVariant& a, const DeviceVariant& b) -> bool {
 						return std::visit([](const auto& dev_a, const auto& dev_b) -> bool {
 							string title_a = dev_a.getTitle();
@@ -2219,7 +2555,6 @@
 				{
 					int count = device_file.readF();
 					if (!count)
-					
 						cout << "К сожалению вы не можете добавить сценарий." << std::endl;
 					else
 					{
@@ -2274,6 +2609,16 @@
 				}
 				}
 			}
+		}
+
+		bool SmartHomeInteraction::showAccountMenu()
+		{
+			return true;
+		}
+
+		void SmartHomeInteraction::showAdminOperationsMenu()
+		{
+
 		}
 
 		void SmartHomeInteraction::showRegistrationMenu()
@@ -2417,11 +2762,12 @@
 			script_subsequence = script_file.unloadScripts(*current_user);
 			while (is_running)
 			{
+
 				cout << "Главное меню:" << endl
 					<< "--> 1.Умный дом." << endl
 					<< "--> 2.Учётная запись." << endl
 					<< ((current_user->getRole() == Admin_) ? "--> 3. Админские операции\n" : "")
-					<< "--> 0.Выход..." << endl << ">>";
+					<< "--> 0.Выход..." << endl << ">> ";
 				while (is_running) {
 					cin >> choice;
 					if (cin.fail()) {

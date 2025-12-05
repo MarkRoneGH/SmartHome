@@ -1333,6 +1333,205 @@
 			smartFile.close();
 		}
 
+		void FileSystem<User>::readF_a()
+		{
+			smartFile.open(file_name, ios::in | ios::binary);
+			if (!smartFile.is_open())
+			{
+				throw runtime_error(OpenFileERROR);
+			}
+
+			smartFile.seekg(0, ios::beg);
+
+			cout << "\n=== ВСЕ ПОЛЬЗОВАТЕЛИ ===\n";
+			int user_count = 0;
+			User current_user;
+
+			while (smartFile >> current_user)
+			{
+				user_count++;
+				cout << "\nПользователь #" << user_count << ":\n";
+				cout << current_user;
+				cout << "----------------------------------------\n";
+			}
+
+			smartFile.close();
+
+			cout << "Всего пользователей: " << user_count << "\n";
+			
+		}
+
+		User FileSystem<User>::chooseUser_a(const string& name)
+		{
+			smartFile.open(file_name, ios::in | ios::binary);
+			if (!smartFile.is_open())
+			{
+				throw runtime_error(OpenFileERROR);
+			}
+
+			smartFile.seekg(0, ios::beg);
+
+			User current_user;
+			bool found = false;
+
+			while (smartFile >> current_user)
+			{
+				if (current_user.getUserName() == name && current_user.getRole() != Admin_)
+				{
+					found = true;
+					break;
+				}
+			}
+
+			smartFile.close();
+
+			if (!found)
+			{
+				throw runtime_error("Пользователь с именем '" + name + "' не найден");
+			}
+
+			return current_user;
+		}
+
+		/*void FileSystem<User>::removeF(const User& user_to_delete)
+		{
+			smartFile.open(file_name, ios::in | ios::out | ios::binary);
+			if (!smartFile.is_open())
+			{
+				throw runtime_error(OpenFileERROR);
+			}
+
+			smartFile.seekg(0, ios::end);
+			std::streampos file_size = smartFile.tellg();
+
+			if (file_size <= 0)
+			{
+				smartFile.close();
+				throw runtime_error("Файл пользователей пуст");
+			}
+
+			smartFile.seekg(0, ios::beg);
+
+			bool user_found = false;
+			std::streampos delete_position = 0;
+			User current_user;
+
+
+			while (smartFile >> current_user)
+			{
+				std::streampos current_pos = smartFile.tellg();
+
+				if (!user_found && current_user == user_to_delete)
+				{
+					user_found = true;
+					delete_position = current_pos;
+
+					delete_position -= static_cast<std::streamoff>(sizeof(User));
+					break;
+				}
+			}
+
+			if (!user_found)
+			{
+				smartFile.close();
+				throw runtime_error("Пользователь не найден");
+			}
+
+
+			smartFile.clear();
+			std::streampos read_position = delete_position;
+			read_position += static_cast<std::streamoff>(sizeof(User));
+
+
+			if (read_position < file_size)
+			{
+				User temp_user;
+				std::streampos write_position = delete_position;
+
+				while (read_position < file_size)
+				{
+
+					smartFile.seekg(read_position);
+					if (!(smartFile >> temp_user))
+						break;
+
+					smartFile.seekp(write_position);
+					smartFile << temp_user;
+
+					read_position += static_cast<std::streamoff>(sizeof(User));
+					write_position += static_cast<std::streamoff>(sizeof(User));
+
+					if (read_position >= file_size)
+						break;
+				}
+			}
+
+			smartFile.close();
+
+			std::streampos new_size = file_size;
+			new_size -= static_cast<std::streamoff>(sizeof(User));
+
+			std::filesystem::resize_file(file_name, new_size);
+
+			cout << "Пользователь успешно удален\n";
+		}*/
+
+		void FileSystem<User>::removeF(const User& user_to_delete)
+		{
+
+			ifstream in_file(file_name, ios::in | ios::binary);
+			if (!in_file.is_open())
+			{
+				throw runtime_error(OpenFileERROR);
+			}
+
+			string temp_filename = "temp_" + file_name;
+			ofstream temp_file(temp_filename, ios::out | ios::binary);
+			if (!temp_file.is_open())
+			{
+				in_file.close();
+				throw runtime_error("Не удалось создать временный файл");
+			}
+
+
+			User current_user;
+			bool user_found = false;
+			int remaining_users = 0;
+
+			while (in_file >> current_user)
+			{
+				if (current_user == user_to_delete)
+				{
+					user_found = true;
+					continue;
+				}
+
+				temp_file << current_user;
+				remaining_users++;
+			}
+
+			in_file.close();
+			temp_file.close();
+
+			if (!user_found)
+			{
+
+				filesystem::remove(temp_filename);
+				throw runtime_error("Пользователь не найден");
+			}
+
+			if (!filesystem::remove(file_name))
+			{
+				filesystem::remove(temp_filename);
+				throw runtime_error("Не удалось удалить старый файл");
+			}
+
+			filesystem::rename(temp_filename, file_name);
+
+			cout << "Пользователь успешно удален. Осталось пользователей: "
+				<< remaining_users << "\n";
+		}
+
 		//FileSystem<DeviceVariant>
 
 		bool FileSystem<DeviceVariant>::sortF(std::function<bool(const DeviceVariant&, const DeviceVariant&)> comp)
@@ -2526,6 +2725,8 @@
 				{
 					int count = device_file.readF();
 					int choice;
+					if (!count)
+						break;
 					while (true) {
 						cin >> choice;
 						if (cin.fail() || choice < 1 || choice > count) {
@@ -2691,7 +2892,7 @@
 					printScripts();
 					break;
 				}
-				case 14:
+				default:
 				{
 					cout << "Вы ввели неверный выбор. Попробуйте еще раз." << endl;
 					break;
@@ -2702,12 +2903,133 @@
 
 		bool SmartHomeInteraction::showAccountMenu()
 		{
-			return true;
+			bool is_running = true;
+			int choice;
+			while (is_running)
+			{
+				cout << "Меню учетной записи:" << endl
+					<< "--> 1.Информация об аккаунте." << endl
+					<< "--> 2.Удалить учетную запись." << endl
+					<< "--> 0.Выход..." << endl << ">> ";
+
+				while (is_running) {
+					cin >> choice;
+					if (cin.fail()) {
+						cin.clear();
+						cin.ignore((numeric_limits<streamsize>::max)(), '\n');
+						cout << "Ошибка ввода! Введите число: ";
+					}
+					else {
+						cin.ignore((numeric_limits<streamsize>::max)(), '\n');
+						break;
+					}
+				}
+				switch (choice) {
+				case 1:
+				{
+					cout << *current_user << endl;
+					string temp_password;
+					cout << "Для просмотра пароля, введите пароль: ";
+					getline(cin, temp_password);
+					string hashed_temp_password = hashPassword(current_user->getUserName(),temp_password);
+					if (hashed_temp_password == current_user->getPassword())
+						cout << "Пароль: " << temp_password << endl;
+					else
+						cout << "Пароль не совпадает." << endl;
+					break;
+				}
+				case 2:
+				{
+					string temp_password;
+					cout << "Для удаления учетной записи, введите пароль: ";
+					getline(cin, temp_password);
+					string hashed_temp_password = hashPassword(current_user->getUserName(), temp_password);
+					if (hashed_temp_password == current_user->getPassword())
+					{
+						if (std::filesystem::remove(device_file.getFileName()))
+						{
+							std::cout << "Файл " << device_file.getFileName() << " успешно удален\n";
+						}
+						else
+						{
+							std::cout << "Файл " << device_file.getFileName() << " не найден или не может быть удален\n";
+						}
+
+						user_file.removeF(*current_user);
+						return true;
+					}
+					else
+						cout << "Пароль учетной записи и введенный пароли не совпадают." << endl;
+					break;
+				}
+				case 0:
+				{
+					is_running = false;
+					break;
+				}
+				default:
+				{
+					cout << "Неверное значение выбора, попробуйте ещё раз." << endl;
+					break;
+				}
+				}
+
+			}
+			return 0;
 		}
 
 		void SmartHomeInteraction::showAdminOperationsMenu()
 		{
+			bool is_running = true;
+			int choice;
+			while (is_running)
+			{
+				cout << "Меню учетной записи:" << endl
+					<< "--> 1.Информация всех зарегистрированных аккаунтов." << endl
+					<< "--> 2.Войти в качестве User." << endl
+					<< "--> 0.Выход..." << endl << ">> ";
 
+				while (is_running) {
+					cin >> choice;
+					if (cin.fail()) {
+						cin.clear();
+						cin.ignore((numeric_limits<streamsize>::max)(), '\n');
+						cout << "Ошибка ввода! Введите число: ";
+					}
+					else {
+						cin.ignore((numeric_limits<streamsize>::max)(), '\n');
+						break;
+					}
+				}
+				switch (choice) {
+				case 1:
+				{
+					user_file.readF_a();
+					break;
+				}
+				case 2:
+				{
+					string name;
+					cout << "Введите имя аккаунта: ";
+					getline(cin, name);
+					User temp_user = user_file.chooseUser_a(name);
+					*current_user = temp_user;
+					showMainMenu();
+					break;
+				}
+				case 0:
+				{
+					is_running = false;
+					break;
+				}
+				default:
+				{
+					cout << "Неверное значение выбора, попробуйте ещё раз." << endl;
+					break;
+				}
+				}
+
+			}
 		}
 
 		void SmartHomeInteraction::showRegistrationMenu()
@@ -2728,7 +3050,52 @@
 				return;
 			}
 			
-			
+			if (current_user->getRole() == Admin_)
+			{
+				User admin = *current_user;
+				short choice;
+				bool is_running = true;
+				while (is_running)
+				{
+					*current_user = admin;
+					cout << "Дальнейшие действия:" << endl
+						<< "1.Админские операции." << endl
+						<< "2.Главное меню." << endl
+						<< "0.Выход." << endl
+						<< "Выберите соответсвующее действие: ";
+					while (true) {
+						cin >> choice;
+						if (cin.fail()) {
+							cin.clear();
+							cin.ignore((numeric_limits<streamsize>::max)(), '\n');
+							cout << "Ошибка ввода! Введите число: ";
+						}
+						else {
+							cin.ignore((numeric_limits<streamsize>::max)(), '\n');
+							break;
+						}
+					}
+					switch (choice)
+					{
+					case 1:
+					{
+						showAdminOperationsMenu();
+						break;
+					}
+					case 2:
+					{
+						showMainMenu();
+						break;
+					}
+					case 0:
+					{
+						is_running = false;
+						break;
+					}
+					}
+				}
+			}
+			else
 			showMainMenu();
 		}
 
@@ -2744,7 +3111,53 @@
 					return;
 				}
 
-			showMainMenu();
+				if (current_user->getRole() == Admin_)
+				{
+					User admin = *current_user;
+					short choice;
+					bool is_running = true;
+					while (is_running)
+					{
+						*current_user = admin;
+						cout << "Дальнейшие действия:" << endl
+							<< "1.Админские операции." << endl
+							<< "2.Главное меню." << endl
+							<< "0.Выход." << endl
+							<< "Выберите соответсвующее действие: ";
+						while (true) {
+							cin >> choice;
+							if (cin.fail()) {
+								cin.clear();
+								cin.ignore((numeric_limits<streamsize>::max)(), '\n');
+								cout << "Ошибка ввода! Введите число: ";
+							}
+							else {
+								cin.ignore((numeric_limits<streamsize>::max)(), '\n');
+								break;
+							}
+						}
+						switch (choice)
+						{
+						case 1:
+						{
+							showAdminOperationsMenu();
+							break;
+						}
+						case 2:
+						{
+							showMainMenu();
+							break;
+						}
+						case 0:
+						{
+							is_running = false;
+							break;
+						}
+						}
+					}
+				}
+				else
+					showMainMenu();
 		}
 
 		void SmartHomeInteraction::showRoleHeaderMenu()
@@ -2855,7 +3268,6 @@
 				cout << "Главное меню:" << endl
 					<< "--> 1.Умный дом." << endl
 					<< "--> 2.Учётная запись." << endl
-					<< ((current_user->getRole() == Admin_) ? "--> 3. Админские операции\n" : "")
 					<< "--> 0.Выход..." << endl << ">> ";
 				while (is_running) {
 					cin >> choice;
@@ -2886,19 +3298,10 @@
 				}
 				case 2:
 				{
-
+					if (showAccountMenu())
+						return;
 					break;
 				}
-				case 3:
-				{
-					if(current_user->getRole() == User_)
-					{ }
-					else {
-
-						break;
-					}
-				}
-
 				default:
 				{
 					cout << "Вы ввели неверный выбор." << endl;

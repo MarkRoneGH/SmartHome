@@ -316,9 +316,9 @@ namespace smart_system
 		fstream smartFile;
 		string file_name;
 	public:
-		User chooseUser(const string& name);
+		User chooseUser_a(const string& name);
 		short checkUser(User& user_to_check);
-		void readF();
+		void readF_a();
 		void writeF(const User& user);
 		void removeF(const User& user);
 		FileSystem();

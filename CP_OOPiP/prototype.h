@@ -26,7 +26,7 @@ using namespace std;
 namespace smart_system
 {
 	template<typename T>
-	class FileSystem; //{}
+	class FileSystem;
 	class SmartSmth;
 	class User;
 	class Thermostat;
@@ -62,8 +62,6 @@ namespace smart_system
 	public:
 		Date(); 
 		Date(const unsigned short year, const short month, const short day);//+~
-		//bool isLeapYear(const unsigned short year) const;//+
-		//bool validDate(const unsigned short year, const short month, const short day) const;//+
 
 		void setYear(const unsigned short year);//+ 
 		void setMonth(const short month);//+
@@ -355,7 +353,9 @@ namespace smart_system
 		static std::queue<DeviceScriptVariant> script_subsequence;
 		static DeviceVariant chooseDevice();
 		static DeviceVariant chooseDevice(SmartType type);
-		static void printScripts();
+		//static DeviceScriptVariant chooseScript(int count);
+		static void editScript();
+		static int printScripts();
 		static void showUserMenu();
 		static void showAdminMenu();
 		static void showGuestMenu();
@@ -371,6 +371,7 @@ namespace smart_system
 		static FileSystem<DeviceVariant> device_file;
 		static FileSystem<DeviceScriptVariant> script_file;
 		static FileSystem<User> user_file;
+		static bool admin_acion;
 	public:
 		~SmartHomeInteraction() = default;
 		SmartHomeInteraction() = default; 

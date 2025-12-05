@@ -466,7 +466,6 @@
 				location.street[street_size] = '\0';
 			}
 			else {
-				// Это консольный ввод
 				cout << "Введите страну: ";
 				in.getline(location.country, SIZE_BUFF);
 				cout << "Введите город: ";
@@ -2060,6 +2059,7 @@
 		FileSystem<DeviceVariant> SmartHomeInteraction::device_file;
 		FileSystem<DeviceScriptVariant> SmartHomeInteraction::script_file;
 		FileSystem<User> SmartHomeInteraction::user_file;
+		bool SmartHomeInteraction::admin_acion = false;
 
 		void SmartHomeInteraction::removeScript(const DeviceVariant& target_device)
 		{
@@ -2098,24 +2098,103 @@
 			}
 		}
 
-		void SmartHomeInteraction::printScripts()
+		int SmartHomeInteraction::printScripts()
 		{
 			if (script_subsequence.empty()) {
 				cout << "Очередь сценариев пуста.\n";
-				return;
+				return 0;
 			}
 
 			cout << " Очередь сценариев \n";
 			cout << "Всего сценариев: " << script_subsequence.size() << "\n\n";
 
 			std::queue<DeviceScriptVariant> temp_queue = script_subsequence;
-			int counter = 1;
+			int counter = 0;
 
 			while (!temp_queue.empty()) {
-				cout << "--- Сценарий " << counter++ << " ---\n";
+				cout << "--- Сценарий " << ++counter << " ---\n";
 				cout << temp_queue.front() << "\n";
 				temp_queue.pop();
 			}
+
+			return counter;
+		}
+
+		void SmartHomeInteraction::editScript()
+		{
+
+			int script_count = printScripts();
+
+			if (script_count == 0)
+			{
+				cout << "Нет сценариев для редактирования\n";
+				return;
+			}
+
+			std::vector<DeviceScriptVariant> scripts_vector;
+			std::queue<DeviceScriptVariant> temp_queue = script_subsequence;
+
+			while (!temp_queue.empty())
+			{
+				scripts_vector.push_back(temp_queue.front());
+				temp_queue.pop();
+			}
+
+			int choice;
+			cout << "\nВыберите сценарий для редактирования (1-" << script_count << "): ";
+			while (true) {
+				cin >> choice;
+				if (cin.fail() || choice < 1 || choice > script_count) {
+					cin.clear();
+					cin.ignore((numeric_limits<streamsize>::max)(), '\n');
+					cout << "Ошибка ввода! Введите число от 1 до " << script_count << ": ";
+				}
+				else {
+					cin.ignore((numeric_limits<streamsize>::max)(), '\n');
+					break;
+				}
+			}
+
+			DeviceScriptVariant& selected_script = scripts_vector[choice - 1];
+
+			cout << "\nРЕДАКТИРОВАНИЕ СЦЕНАРИЯ\n";
+			cout << "Текущие данные сценария:\n";
+
+			std::visit([](const auto& script) {
+				cout << script << "\n";
+				}, selected_script);
+
+			cout << "\nВведите новое описание сценария: ";
+			string new_script;
+			getline(cin,new_script);
+
+			cout << "Введите новую длительность (в минутах): ";
+			short new_duration;
+			cin >> new_duration;
+			cin.ignore();
+
+			if (new_duration <= 0)
+			{
+				cout << "Длительность должна быть положительным числом. Изменения отменены.\n";
+				return;
+			}
+
+
+			std::visit([&new_script, new_duration](auto& script) {
+				script.setScript(new_script);
+				script.setDuration(new_duration);
+				}, selected_script);
+
+			std::queue<DeviceScriptVariant> updated_queue;
+			for (const auto& script : scripts_vector)
+			{
+				updated_queue.push(script);
+			}
+
+			script_subsequence = updated_queue;
+
+
+			cout << "Сценарий успешно отредактирован!\n";
 		}
 
 		DeviceVariant SmartHomeInteraction::chooseDevice()
@@ -2567,8 +2646,18 @@
 
 						cout << "Введите длительность сценария (в минутах): ";
 						short duration;
-						cin >> duration;
-						cin.ignore();
+						while (true) {
+							cin >> duration;
+							if (cin.fail() || duration < 0) {
+								cin.clear();
+								cin.ignore((numeric_limits<streamsize>::max)(), '\n');
+								cout << "Ошибка ввода! Введите число: ";
+							}
+							else {
+								cin.ignore((numeric_limits<streamsize>::max)(), '\n');
+								break;
+							}
+						}
 
 						DeviceScriptVariant dev_script = std::visit([&script_desc, &duration](const auto& concrete_device) -> DeviceScriptVariant {
 							return DeviceScript<std::decay_t<decltype(concrete_device)>>(concrete_device,script_desc,duration);
@@ -2594,7 +2683,7 @@
 				}
 				case 12:
 				{
-
+					editScript();
 					break;
 				}
 				case 13:

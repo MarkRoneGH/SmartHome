@@ -551,7 +551,6 @@
 			else {
 
 				out << "Username: " << user.user_name << "\n";
-				out << "Password(Hashed): " << user.hashed_password << "\n";
 				out << "Location: " << user.location_ << "\n";
 				out << "Birth Date: " << user.date_ << "\n";
 				out << "Role: ";
@@ -2080,6 +2079,95 @@
 			file.close();
 		}
 
+		void FileSystem<DeviceVariant>::generateDeviceReport(const string& report_file_name)
+		{
+			smartFile.open(file_name, ios::in | ios::binary);
+			if (!smartFile.is_open())
+			{
+				throw runtime_error(OpenFileERROR);
+			}
+
+			ofstream report_file(report_file_name, ios::out | ios::app);
+			if (!report_file.is_open())
+			{
+				smartFile.close();
+				throw runtime_error("Не удалось открыть файл отчета");
+			}
+
+			report_file << "\nУСТРОЙСТВА:\n";
+			report_file << "============================\n";
+
+			smartFile.seekg(0, ios::end);
+			if (smartFile.tellg() == 0)
+			{
+				report_file << "Нет подключенных устройств\n";
+				smartFile.close();
+				report_file.close();
+				return;
+			}
+			smartFile.seekg(0, ios::beg);
+
+
+
+			vector<DeviceVariant> devices;
+			DeviceVariant device;
+
+
+			while (smartFile >> device)
+			{
+				devices.push_back(device);
+			}
+			smartFile.close();
+
+			int device_count = 0;
+			for (const auto& dev : devices)
+			{
+				device_count++;
+				report_file << "\nУстройство #" << device_count << ":\n";
+
+				stringstream device_ss;
+				device_ss << dev;
+				report_file << device_ss.str();
+
+				report_file << "----------------------------------------\n";
+			}
+
+			report_file << "\nСТАТИСТИКА УСТРОЙСТВ:\n";
+			report_file << "============================\n";
+			report_file << "Всего устройств: " << devices.size() << "\n";
+
+			int lights = 0, thermos = 0, cameras = 0, online = 0;
+
+			for (const auto& dev : devices)
+			{
+				SmartType type = std::visit([](auto&& arg) {
+					return arg.getType();
+					}, dev);
+
+				switch (type)
+				{
+				case SmartType::Light: lights++; break;
+				case SmartType::Thermo: thermos++; break;
+				case SmartType::SecCamera: cameras++; break;
+				}
+
+				if (std::visit([](auto&& arg) { return arg.getOnline(); }, dev))
+				{
+					online++;
+				}
+			}
+
+			report_file << "  • Умных ламп: " << lights << "\n";
+			report_file << "  • Термостатов: " << thermos << "\n";
+			report_file << "  • Камер безопасности: " << cameras << "\n";
+			report_file << "  • Онлайн: " << online << " из " << devices.size() << " ("
+				<< fixed << setprecision(1)
+				<< (devices.size() > 0 ? (online * 100.0 / devices.size()) : 0)
+				<< "%)\n";
+
+			report_file.close();
+		}
+
 		//FileSystem<DeviceScriptVariant>
 
 		string FileSystem<DeviceScriptVariant>::getFileName() const { return file_name; }
@@ -2613,9 +2701,13 @@
 			cout << "Отчет успешно сохранен в файл: " << report_filename << "\n";
 		}*/
 
-		void SmartHomeInteraction::generateUserReport()
+		void SmartHomeInteraction::generateFullReport()
 		{
-			string report_filename = current_user->getUserName() + "_smart_home_report.txt";
+			string report_filename;
+			if(!admin_action)
+				report_filename = current_user->getUserName() + "_smart_home_report.txt";
+			else
+				report_filename = current_user->getUserName() + "_smart_home_admin_report.txt";
 
 			stringstream ss;
 			ss << *current_user; 
@@ -2632,6 +2724,12 @@
 			report_file << "============================\n";
 
 			report_file << ss.str();
+
+			report_file.close();
+
+			device_file.generateDeviceReport(report_filename);
+
+			report_file.open(report_filename, ios::out | ios::app);
 
 			report_file << "\nАКТИВНЫЕ СЦЕНАРИИ:\n";
 			report_file << "============================\n";
@@ -2655,10 +2753,23 @@
 					report_file << "----------------------------------------\n";
 					scripts_copy.pop();
 				}
+
+				report_file << "Всего сценариев: " << script_subsequence.size() << "\n";
 			}
 
-			report_file.close();
+			time_t now = time(0);
+			tm* local_time = localtime(&now);
+			report_file << "\nОтчет сгенерирован: "
+				<< (local_time->tm_year + 1900) << "-"
+				<< setw(2) << setfill('0') << (local_time->tm_mon + 1) << "-"
+				<< setw(2) << setfill('0') << local_time->tm_mday << " "
+				<< setw(2) << setfill('0') << local_time->tm_hour << ":"
+				<< setw(2) << setfill('0') << local_time->tm_min << ":"
+				<< setw(2) << setfill('0') << local_time->tm_sec << "\n";
 
+			report_file << "=============================================\n";
+
+			report_file.close();
 			cout << "Отчет создан: " << report_filename << "\n";
 		}
 
@@ -2692,7 +2803,7 @@
 				case 1:
 				{
 					if (admin_action) {
-						cout << "В качестве User, вы можете только редактировать и удалять." << endl;
+						cout << "На аккаунте другого пользователя, вы можете только редактировать, удалять и создать отчет." << endl;
 						break;
 					}
 					auto device = chooseDevice();
@@ -2808,7 +2919,7 @@
 				case 5:
 				{
 					if (admin_action) {
-						cout << "В качестве User, вы можете только редактировать и удалять." << endl;
+						cout << "На аккаунте другого пользователя, вы можете только редактировать, удалять и создать отчет." << endl;
 						break;
 					}
 					device_file.sortF([](const DeviceVariant& a, const DeviceVariant& b) -> bool {
@@ -2825,7 +2936,7 @@
 				case 6:
 				{
 					if (admin_action) {
-						cout << "В качестве User, вы можете только редактировать и удалять." << endl;
+						cout << "На аккаунте другого пользователя, вы можете только редактировать, удалять и создать отчет." << endl;
 						break;
 					}
 					string target_dev_name;
@@ -2836,17 +2947,13 @@
 				}
 				case 7:
 				{
-					if (admin_action) {
-						cout << "В качестве User, вы можете только редактировать и удалять." << endl;
-						break;
-					}
-					generateUserReport();
+					generateFullReport();
 					break;
 				}
 				case 8:
 				{
 					if (admin_action) {
-						cout << "В качестве User, вы можете только редактировать и удалять." << endl;
+						cout << "На аккаунте другого пользователя, вы можете только редактировать, удалять и создать отчет." << endl;
 						break;
 					}
 					bool isOnline;
@@ -2878,7 +2985,7 @@
 				case 9:
 				{
 					if (admin_action) {
-						cout << "В качестве User, вы можете только редактировать и удалять." << endl;
+						cout << "На аккаунте другого пользователя, вы можете только редактировать, удалять и создать отчет." << endl;
 						break;
 					}
 					Date first_date, second_date;
@@ -2911,7 +3018,7 @@
 				case 10:
 				{
 					if (admin_action) {
-						cout << "В качестве User, вы можете только редактировать и удалять." << endl;
+						cout << "На аккаунте другого пользователя, вы можете только редактировать, удалять и создать отчет." << endl;
 						break;
 					}
 					int count = device_file.readF();
@@ -3021,12 +3128,19 @@
 				}
 				case 2:
 				{
-					string temp_password;
-					cout << "Для удаления учетной записи, введите пароль: ";
-					getline(cin, temp_password);
-					string hashed_temp_password = hashPassword(current_user->getUserName(), temp_password);
-					if (hashed_temp_password == current_user->getPassword())
+					if (!admin_action)
 					{
+						string temp_password;
+						cout << "Для удаления учетной записи, введите пароль: ";
+						getline(cin, temp_password);
+						string hashed_temp_password = hashPassword(current_user->getUserName(), temp_password);
+						if (hashed_temp_password != current_user->getPassword())
+						{
+							cout << "Пароль учетной записи и введенный пароли не совпадают." << endl;
+							break;
+
+						}
+					}
 						if (std::filesystem::remove(device_file.getFileName()))
 						{
 							std::cout << "Файл " << device_file.getFileName() << " успешно удален\n";
@@ -3038,9 +3152,7 @@
 
 						user_file.removeF(*current_user);
 						return true;
-					}
-					else
-						cout << "Пароль учетной записи и введенный пароли не совпадают." << endl;
+
 					break;
 				}
 				case 0:

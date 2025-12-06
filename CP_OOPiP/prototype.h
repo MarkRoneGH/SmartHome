@@ -286,14 +286,13 @@ namespace smart_system
 		void setDevice(const T& smart_device);
 	};
 	
-
 	template<>
 	class FileSystem<DeviceVariant>
 	{
 		fstream smartFile;
 		string file_name;
 	public:
-
+		void generateDeviceReport(const string& report_file_name);
 		bool checkDevice(const DeviceVariant& device);
 		int readF();
 		DeviceVariant chooseCertainDevice(const int count);
@@ -363,7 +362,7 @@ namespace smart_system
 		static void showSmartHomeMenu();
 		static void showDeviceCatalogHeaderMenu();
 		static void showSHOHeaderMenu();
-		static void generateUserReport();
+		static void generateFullReport();
 		static void showRoleHeaderMenu();
 		static void showRegistrationMenu();
 		static void showLoginMenu();

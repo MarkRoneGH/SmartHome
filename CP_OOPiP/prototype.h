@@ -18,8 +18,7 @@
 #include <cctype> 
 
 #define SIZE_BUFF 64
-#define OpenFileERROR "There's the OPEN_FILE ERROR..."
-#define EmptyERROR "There's the EMPTY ERROR..."
+#define OpenFileERROR "Проблема открытия файла..."
 
 using namespace std;
 
@@ -217,10 +216,6 @@ namespace smart_system
 
 			if (ofs != nullptr || fs != nullptr) {
 
-				//SmartType type = deviceScript.smart_device.getType();
-				//out.write(reinterpret_cast<const char*>(&type), sizeof(type));
-
-
 				out << deviceScript.smart_device;
 
 				out.write(reinterpret_cast<const char*>(&deviceScript.duration_), sizeof(deviceScript.duration_));
@@ -230,9 +225,10 @@ namespace smart_system
 				out.write(deviceScript.script, script_size);
 			}
 			else {
-				out << "Device Script: " << deviceScript.script << "\n";
-				out << "Duration: " << deviceScript.duration_ << " minutes\n";
-				out << "Device: " << deviceScript.smart_device << "\n";
+				out << setw(21) << left << "Скрипт устройства: " << deviceScript.script << "\n";
+				out << setw(21) << left << "Длительность: " << deviceScript.duration_ << " минут\n";
+				out << setw(20) << left << "Устройство: " << "\n";
+				out << deviceScript.smart_device;
 			}
 			return out;
 		}

@@ -1,4 +1,4 @@
-	#include "prototype.h"
+п»ї	#include "prototype.h"
 	#pragma warning(disable:4996)
 	namespace smart_system
 	{
@@ -7,7 +7,7 @@
 			std::string password;
 			char ch;
 
-			std::cout << "Введите пароль: ";
+			std::cout << "Р’РІРµРґРёС‚Рµ РїР°СЂРѕР»СЊ: ";
 
 			while ((ch = _getch()) != '\r') {
 				if (ch == '\b') {
@@ -18,11 +18,17 @@
 				}
 				else if (ch >= 32 && ch <= 126) {
 					password += ch;
-					std::cout << '•';
+					std::cout << 'вЂў';
 				}
 			}
 			std::cout << std::endl;
 			return password;
+		}
+
+		string hashPassword(const string& user_name, const string& password)
+		{
+			return string(user_name) + password + "_" + std::to_string(password.size() * 12345);
+			/*return "salted_" + password + "_" + std::to_string(password.size() * 12345);*/
 		}
 
 		//SmartSmth
@@ -46,7 +52,7 @@
 		void SmartSmth::setTitle(const string& title)
 		{
 			if (title.length() >= SIZE_BUFF) {
-				throw std::invalid_argument("Неверное значение название smart-девайса.");
+				throw std::invalid_argument("РќРµРІРµСЂРЅРѕРµ Р·РЅР°С‡РµРЅРёРµ РЅР°Р·РІР°РЅРёРµ smart-РґРµРІР°Р№СЃР°.");
 			}
 			strncpy_s(this->title, title.c_str(), SIZE_BUFF - 1);
 			this->title[SIZE_BUFF - 1] = '\0';
@@ -88,16 +94,16 @@
 			}
 			else {
 
-				out << "Device Title: " << device.title << "\n";
-				out << "Type: ";
+				out << setw(20) << left << "РќР°Р·РІР°РЅРёРµ СѓСЃС‚СЂРѕР№СЃС‚РІР°: " << device.title << "\n";
+				out << setw(20) << left << "РўРёРї: ";
 				switch (device.anyType) {
-				case SmartType::Light: out << "Light"; break;
-				case SmartType::Thermo: out << "Thermostat"; break;
-				case SmartType::SecCamera: out << "Security Camera"; break;
+				case SmartType::Light: out << " Р›Р°РјРїР°"; break;
+				case SmartType::Thermo: out << " РўРµСЂРјРѕСЃС‚Р°С‚"; break;
+				case SmartType::SecCamera: out << " РљР°РјРµСЂР° Р±РµР·РѕРїР°СЃРЅРѕСЃС‚Рё"; break;
 				}
 				out << "\n";
-				out << "Online: " << (device.isOnline ? "Yes" : "No") << "\n";
-				out << "Purchase Date: " << device.release_date << "\n";
+				out << setw(20) << left << "РћРЅР»Р°Р№РЅ: " << (device.isOnline ? " Р”Р°" : " РќРµС‚") << "\n";
+				out << setw(21) << left << "Р”Р°С‚Р° РїРѕРєСѓРїРєРё: " << device.release_date << "\n";
 			}
 			return out;
 		}	
@@ -140,16 +146,16 @@
 			}
 			else {
 
-				cout << "Введите название устройства: ";
+				cout << "Р’РІРµРґРёС‚Рµ РЅР°Р·РІР°РЅРёРµ СѓСЃС‚СЂРѕР№СЃС‚РІР°: ";
 				in.getline(device.title, SIZE_BUFF);
 
-				cout << "Устройство онлайн? (0-Нет, 1-Да): ";
+				cout << "РЈСЃС‚СЂРѕР№СЃС‚РІРѕ РѕРЅР»Р°Р№РЅ? (0-РќРµС‚, 1-Р”Р°): ";
 				while (true) {
 					in >> device.isOnline;
 					if (cin.fail()) {
 						cin.clear();
 						cin.ignore((numeric_limits<streamsize>::max)(), '\n');
-						cout << "Ошибка ввода! Введите 0 или 1: ";
+						cout << "РћС€РёР±РєР° РІРІРѕРґР°! Р’РІРµРґРёС‚Рµ 0 РёР»Рё 1: ";
 					}
 					else {
 						cin.ignore((numeric_limits<streamsize>::max)(), '\n');
@@ -157,7 +163,7 @@
 					}
 				}
 
-				cout << "Введите дату покупки (дд.мм.гггг): ";
+				cout << "Р’РІРµРґРёС‚Рµ РґР°С‚Сѓ РїРѕРєСѓРїРєРё (РґРґ.РјРј.РіРіРіРі): ";
 				in >> device.release_date;
 			}
 			return in;
@@ -200,19 +206,19 @@
 		{
 			if (year < 1940 || year > 2025)
 			{
-				cerr << "Год должен быть в диапазоне 1940-2025" << endl;
+				cerr << "Р“РѕРґ РґРѕР»Р¶РµРЅ Р±С‹С‚СЊ РІ РґРёР°РїР°Р·РѕРЅРµ 1940-2025" << endl;
 				return false;
 			}
 
 			if (month < 1 || month > 12)
 			{
-				cerr << "Месяц должен быть в диапазоне 1-12" << endl;
+				cerr << "РњРµСЃСЏС† РґРѕР»Р¶РµРЅ Р±С‹С‚СЊ РІ РґРёР°РїР°Р·РѕРЅРµ 1-12" << endl;
 				return false;
 			}
 
 			if (day < 1 || day > 31)
 			{
-				cerr << "День должен быть в диапазоне 1-31" << endl;
+				cerr << "Р”РµРЅСЊ РґРѕР»Р¶РµРЅ Р±С‹С‚СЊ РІ РґРёР°РїР°Р·РѕРЅРµ 1-31" << endl;
 				return false;
 			}
 
@@ -226,7 +232,7 @@
 
 			if (day > maxDays)
 			{
-				cerr << "В выбранном месяце не может быть " << day << " дней" << endl;
+				cerr << "Р’ РІС‹Р±СЂР°РЅРЅРѕРј РјРµСЃСЏС†Рµ РЅРµ РјРѕР¶РµС‚ Р±С‹С‚СЊ " << day << " РґРЅРµР№" << endl;
 				return false;
 			}
 
@@ -274,12 +280,12 @@
 
 		istream& operator>>(istream& in, Date& date)
 		{
-			// Пытаемся преобразовать к ifstream (для бинарного файла)
+			// РџС‹С‚Р°РµРјСЃСЏ РїСЂРµРѕР±СЂР°Р·РѕРІР°С‚СЊ Рє ifstream (РґР»СЏ Р±РёРЅР°СЂРЅРѕРіРѕ С„Р°Р№Р»Р°)
 			ifstream* ifs = dynamic_cast<ifstream*>(&in);
 			fstream* fs = dynamic_cast<fstream*>(&in);
 
 			if (ifs != nullptr || fs != nullptr) {
-				// Это файловый поток - бинарное чтение
+				// Р­С‚Рѕ С„Р°Р№Р»РѕРІС‹Р№ РїРѕС‚РѕРє - Р±РёРЅР°СЂРЅРѕРµ С‡С‚РµРЅРёРµ
 				if (!in.read(reinterpret_cast<char*>(&date.year_), sizeof(date.year_))) {
 					in.setstate(ios::failbit);
 					return in;
@@ -298,39 +304,39 @@
 				bool valid_date = false;
 
 				while (!valid_date) {
-					cout << "Введите день: ";
+					cout << "Р’РІРµРґРёС‚Рµ РґРµРЅСЊ: ";
 					while (true) {
 						in >> date.day_;
 						if (cin.fail() || date.day_ < 1 || date.day_ > 31) {
 							cin.clear();
 							cin.ignore((numeric_limits<streamsize>::max)(), '\n');
-							cout << "Ошибка ввода! Введите число от 1 до 31: ";
+							cout << "РћС€РёР±РєР° РІРІРѕРґР°! Р’РІРµРґРёС‚Рµ С‡РёСЃР»Рѕ РѕС‚ 1 РґРѕ 31: ";
 						}
 						else {
 							break;
 						}
 					}
 
-					cout << "Введите месяц: ";
+					cout << "Р’РІРµРґРёС‚Рµ РјРµСЃСЏС†: ";
 					while (true) {
 						in >> date.month_;
 						if (cin.fail() || date.month_ < 1 || date.month_ > 12) {
 							cin.clear();
 							cin.ignore((numeric_limits<streamsize>::max)(), '\n');
-							cout << "Ошибка ввода! Введите число от 1 до 12: ";
+							cout << "РћС€РёР±РєР° РІРІРѕРґР°! Р’РІРµРґРёС‚Рµ С‡РёСЃР»Рѕ РѕС‚ 1 РґРѕ 12: ";
 						}
 						else {
 							break;
 						}
 					}
 
-					cout << "Введите год: ";
+					cout << "Р’РІРµРґРёС‚Рµ РіРѕРґ: ";
 					while (true) {
 						in >> date.year_;
 						if (cin.fail() || date.year_ < 1940 || date.year_ > 2025) {
 							cin.clear();
 							cin.ignore((numeric_limits<streamsize>::max)(), '\n');
-							cout << "Ошибка ввода! Введите число от 1940 до 2025: ";
+							cout << "РћС€РёР±РєР° РІРІРѕРґР°! Р’РІРµРґРёС‚Рµ С‡РёСЃР»Рѕ РѕС‚ 1940 РґРѕ 2025: ";
 						}
 						else {
 							break;
@@ -341,7 +347,7 @@
 						valid_date = true;
 					}
 					else {
-						cout << "Некорректная дата! Пожалуйста, введите заново." << endl;
+						cout << "РќРµРєРѕСЂСЂРµРєС‚РЅР°СЏ РґР°С‚Р°! РџРѕР¶Р°Р»СѓР№СЃС‚Р°, РІРІРµРґРёС‚Рµ Р·Р°РЅРѕРІРѕ." << endl;
 					}
 				}
 			}
@@ -427,21 +433,21 @@
 				out.write(location.street, street_size);
 			}
 			else {
-				out << "Country: " << location.country
-					<< ", City: " << location.city
-					<< ", Street: " << location.street;
+				out << "РЎС‚СЂР°РЅР°: " << setw(15) << left << location.country
+					<< "Р“РѕСЂРѕРґ: " << setw(15) << left << location.city
+					<< "РЈР»РёС†Р°: " << location.street;
 			}
 			return out;
 		}
 
 		istream& operator>>(istream& in, UserLocation& location)
 		{
-			// Пытаемся преобразовать к ifstream (для бинарного файла)
+			// РџС‹С‚Р°РµРјСЃСЏ РїСЂРµРѕР±СЂР°Р·РѕРІР°С‚СЊ Рє ifstream (РґР»СЏ Р±РёРЅР°СЂРЅРѕРіРѕ С„Р°Р№Р»Р°)
 			ifstream* ifs = dynamic_cast<ifstream*>(&in);
 			fstream* fs = dynamic_cast<fstream*>(&in);
 
 			if (ifs != nullptr || fs != nullptr) {
-				// Это файловый поток - бинарное чтение
+				// Р­С‚Рѕ С„Р°Р№Р»РѕРІС‹Р№ РїРѕС‚РѕРє - Р±РёРЅР°СЂРЅРѕРµ С‡С‚РµРЅРёРµ
 				size_t country_size = 0;
 				if (!in.read(reinterpret_cast<char*>(&country_size), sizeof(country_size)) || country_size >= SIZE_BUFF) {
 					in.setstate(ios::failbit);
@@ -467,11 +473,11 @@
 				location.street[street_size] = '\0';
 			}
 			else {
-				cout << "Введите страну: ";
+				cout << "Р’РІРµРґРёС‚Рµ СЃС‚СЂР°РЅСѓ: ";
 				in.getline(location.country, SIZE_BUFF);
-				cout << "Введите город: ";
+				cout << "Р’РІРµРґРёС‚Рµ РіРѕСЂРѕРґ: ";
 				in.getline(location.city, SIZE_BUFF);
-				cout << "Введите улицу: ";
+				cout << "Р’РІРµРґРёС‚Рµ СѓР»РёС†Сѓ: ";
 				in.getline(location.street, SIZE_BUFF);
 			}
 			return in;
@@ -485,22 +491,18 @@
 		}
 
 		//User
+
 		User::User(const string& username = "User", const string& password = "random", const UserLocation& location = UserLocation(), const Date& date = Date(), UserRole role = User_) : location_(location), date_(date), anyRole(role)
 		{
 			setUserName(username);
-			setPassword(password);
+			string temp_password = hashPassword(username, password);
+			setPassword(temp_password);
 		}
 
 		UserLocation User::getLocation() const { return location_; }
 		string User::getPassword() const { return string(hashed_password); }
 		UserRole User::getRole() const { return anyRole; }
 		Date User::getUserDate() const { return date_; }
-
-		string hashPassword(const string& user_name,const string& password)
-		{
-			return string(user_name) + password + "_" + std::to_string(password.size() * 12345);
-			/*return "salted_" + password + "_" + std::to_string(password.size() * 12345);*/
-		}
 
 		void User::setRole(const UserRole& role) { anyRole = role; }
 		void User::setUserDate(const Date& date) { date_ = date; }
@@ -516,7 +518,7 @@
 		void User::setUserName(const string& user_name)
 		{
 			//if (user_name.length() >= SIZE_BUFF) {
-			//	throw std::invalid_argument("Неверное значение название smart-девайса.");
+			//	throw std::invalid_argument("РќРµРІРµСЂРЅРѕРµ Р·РЅР°С‡РµРЅРёРµ РЅР°Р·РІР°РЅРёРµ smart-РґРµРІР°Р№СЃР°.");
 			//}
 			strncpy_s(this->user_name, user_name.c_str(), SIZE_BUFF - 1);
 			this->user_name[SIZE_BUFF - 1] = '\0';
@@ -550,14 +552,14 @@
 			}
 			else {
 
-				out << "Username: " << user.user_name << "\n";
-				out << "Location: " << user.location_ << "\n";
-				out << "Birth Date: " << user.date_ << "\n";
-				out << "Role: ";
+				out << setw(20) << left << "РРјСЏ РїРѕР»СЊР·РѕРІР°С‚РµР»СЏ: " << user.user_name << "\n";
+				out << setw(20) << left << "РњРµСЃС‚РѕРїРѕР»РѕР¶РµРЅРёРµ: " << user.location_ << "\n";
+				out << setw(20) << left << "Р”Р°С‚Р° СЂРѕР¶РґРµРЅРёСЏ: " << user.date_ << "\n";
+				out << setw(20) << left << "Р РѕР»СЊ: ";
 				switch (user.anyRole) {
-				case UserRole::Admin_: out << "Admin"; break;
-				case UserRole::User_: out << "User"; break;
-				case UserRole::Guest_: out << "Guest"; break;
+				case UserRole::Admin_: out << "РђРґРјРёРЅРёСЃС‚СЂР°С‚РѕСЂ"; break;
+				case UserRole::User_: out << "РџРѕР»СЊР·РѕРІР°С‚РµР»СЊ"; break;
+				case UserRole::Guest_: out << "Р“РѕСЃС‚СЊ"; break;
 				}
 				out << "\n";
 			}
@@ -599,7 +601,7 @@
 			}
 			else {
 
-				cout << "Введите имя пользователя: ";
+				cout << "Р’РІРµРґРёС‚Рµ РёРјСЏ РїРѕР»СЊР·РѕРІР°С‚РµР»СЏ: ";
 				in.getline(user.user_name, SIZE_BUFF);
 
 
@@ -609,10 +611,10 @@
 				temp_password = hashPassword(user.getUserName(),temp_password);
 				user.setPassword(temp_password);
 
-				cout << "Введите данные о местоположении:" << endl;
+				cout << "Р’РІРµРґРёС‚Рµ РґР°РЅРЅС‹Рµ Рѕ РјРµСЃС‚РѕРїРѕР»РѕР¶РµРЅРёРё:" << endl;
 				in >> user.location_;
 
-				cout << "Введите дату рождения (дд.мм.гггг): " << endl;
+				cout << "Р’РІРµРґРёС‚Рµ РґР°С‚Сѓ СЂРѕР¶РґРµРЅРёСЏ (РґРґ.РјРј.РіРіРіРі): " << endl;
 				in >> user.date_;
 			}
 
@@ -674,8 +676,8 @@
 				out << static_cast<const SmartSmth&>(light);
 
 
-				out << "Brightness: " << light.brightness_ << "%\n";
-				out << "Color: " << light.color << "\n";
+				out << setw(21) << left << "РЇСЂРєРѕСЃС‚СЊ: " << light.brightness_ << "%\n";
+				out << setw(21) << left << "Р¦РІРµС‚: " << light.color << "\n";
 			}
 			return out;
 		}
@@ -707,13 +709,13 @@
 				in >> static_cast<SmartSmth&>(light);
 
 
-				cout << "Введите яркость (0-100): ";
+				cout << "Р’РІРµРґРёС‚Рµ СЏСЂРєРѕСЃС‚СЊ (0-100): ";
 				while (true) {
 					in >> light.brightness_;
 					if (cin.fail() || light.brightness_ < 0 || light.brightness_ > 100) {
 						cin.clear();
 						cin.ignore((numeric_limits<streamsize>::max)(), '\n');
-						cout << "Ошибка ввода! Введите число от 0 до 100: ";
+						cout << "РћС€РёР±РєР° РІРІРѕРґР°! Р’РІРµРґРёС‚Рµ С‡РёСЃР»Рѕ РѕС‚ 0 РґРѕ 100: ";
 					}
 					else {
 						cin.ignore((numeric_limits<streamsize>::max)(), '\n');
@@ -721,7 +723,7 @@
 					}
 				}
 
-				cout << "Введите цвет: ";
+				cout << "Р’РІРµРґРёС‚Рµ С†РІРµС‚: ";
 				in.getline(light.color, SIZE_BUFF);
 			}
 			return in;
@@ -795,9 +797,9 @@
 				out << static_cast<const SmartSmth&>(thermostat);
 
 				
-				out << "Current Temperature: " << thermostat.currentTemperature << "°C\n";
-				out << "Target Temperature: " << thermostat.targetTemperature << "°C\n";
-				out << "Mode: " << thermostat.mode << "\n";
+				out << setw(21) << left << "РўРµРєСѓС‰Р°СЏ С‚РµРјРїРµСЂР°С‚СѓСЂР°: " << thermostat.currentTemperature << "C\n";
+				out << setw(21) << left << "Р¦РµР»РµРІР°СЏ С‚РµРјРїРµСЂР°С‚СѓСЂР°: " << thermostat.targetTemperature << "C\n";
+				out << setw(21) << left << "Р РµР¶РёРј: " << thermostat.mode << "\n";
 			}
 			return out;
 		}
@@ -837,13 +839,13 @@
 				in >> static_cast<SmartSmth&>(thermostat);
 
 				
-				cout << "Введите текущую температуру: ";
+				cout << "Р’РІРµРґРёС‚Рµ С‚РµРєСѓС‰СѓСЋ С‚РµРјРїРµСЂР°С‚СѓСЂСѓ: ";
 				while (true) {
 					in >> thermostat.currentTemperature;
 					if (cin.fail()) {
 						cin.clear();
 						cin.ignore((numeric_limits<streamsize>::max)(), '\n');
-						cout << "Ошибка ввода! Введите число: ";
+						cout << "РћС€РёР±РєР° РІРІРѕРґР°! Р’РІРµРґРёС‚Рµ С‡РёСЃР»Рѕ: ";
 					}
 					else {
 						cin.ignore((numeric_limits<streamsize>::max)(), '\n');
@@ -851,13 +853,13 @@
 					}
 				}
 
-				cout << "Введите целевую температуру: ";
+				cout << "Р’РІРµРґРёС‚Рµ С†РµР»РµРІСѓСЋ С‚РµРјРїРµСЂР°С‚СѓСЂСѓ: ";
 				while (true) {
 					in >> thermostat.targetTemperature;
 					if (cin.fail()) {
 						cin.clear();
 						cin.ignore((numeric_limits<streamsize>::max)(), '\n');
-						cout << "Ошибка ввода! Введите число: ";
+						cout << "РћС€РёР±РєР° РІРІРѕРґР°! Р’РІРµРґРёС‚Рµ С‡РёСЃР»Рѕ: ";
 					}
 					else {
 						cin.ignore((numeric_limits<streamsize>::max)(), '\n');
@@ -865,7 +867,7 @@
 					}
 				}
 
-				cout << "Введите режим (обогрев/охлаждение/авто): ";
+				cout << "Р’РІРµРґРёС‚Рµ СЂРµР¶РёРј (РѕР±РѕРіСЂРµРІ/РѕС…Р»Р°Р¶РґРµРЅРёРµ/Р°РІС‚Рѕ): ";
 				in.getline(thermostat.mode, SIZE_BUFF);
 			}
 			return in;
@@ -912,10 +914,9 @@
 				
 				out << static_cast<const SmartSmth&>(camera);
 
-				
-				out << "Recording: " << (camera.isRecording ? "Yes" : "No") << "\n";
-				out << "Resolution: " << camera.resolution << "p\n";
-				out << "Motion Detection: " << (camera.motionDetectionEnabled ? "Enabled" : "Disabled") << "\n";
+				out << setw(21) << left << "Р—Р°РїРёСЃСЊ: " << (camera.isRecording ? "Р”Р°" : "РќРµС‚") << "\n";
+				out << setw(21) << left << "Р Р°Р·СЂРµС€РµРЅРёРµ: " << camera.resolution << "p\n";
+				out << setw(21) << left << "Р”РµС‚РµРєС†РёСЏ РґРІРёР¶РµРЅРёСЏ: " << (camera.motionDetectionEnabled ? "Р’РєР»СЋС‡РµРЅР°" : "Р’С‹РєР»СЋС‡РµРЅР°") << "\n";
 			}
 			return out;
 		}
@@ -949,13 +950,13 @@
 				in >> static_cast<SmartSmth&>(camera);
 
 				
-				cout << "Идет запись? (0-Нет, 1-Да): ";
+				cout << "РРґРµС‚ Р·Р°РїРёСЃСЊ? (0-РќРµС‚, 1-Р”Р°): ";
 				while (true) {
 					in >> camera.isRecording;
 					if (cin.fail() || (camera.isRecording != 0 && camera.isRecording != 1)) {
 						cin.clear();
 						cin.ignore((numeric_limits<streamsize>::max)(), '\n');
-						cout << "Ошибка ввода! Введите 0 или 1: ";
+						cout << "РћС€РёР±РєР° РІРІРѕРґР°! Р’РІРµРґРёС‚Рµ 0 РёР»Рё 1: ";
 					}
 					else {
 						cin.ignore((numeric_limits<streamsize>::max)(), '\n');
@@ -963,14 +964,14 @@
 					}
 				}
 
-				cout << "Введите разрешение (720/1080/1440/2160): ";
+				cout << "Р’РІРµРґРёС‚Рµ СЂР°Р·СЂРµС€РµРЅРёРµ (720/1080/1440/2160): ";
 				while (true) {
 					in >> camera.resolution;
 					if (cin.fail() || (camera.resolution != 720 && camera.resolution != 1080 &&
 						camera.resolution != 1440 && camera.resolution != 2160)) {
 						cin.clear();
 						cin.ignore((numeric_limits<streamsize>::max)(), '\n');
-						cout << "Ошибка ввода! Введите 720, 1080, 1440 или 2160: ";
+						cout << "РћС€РёР±РєР° РІРІРѕРґР°! Р’РІРµРґРёС‚Рµ 720, 1080, 1440 РёР»Рё 2160: ";
 					}
 					else {
 						cin.ignore((numeric_limits<streamsize>::max)(), '\n');
@@ -978,13 +979,13 @@
 					}
 				}
 
-				cout << "Детекция движения включена? (0-Нет, 1-Да): ";
+				cout << "Р”РµС‚РµРєС†РёСЏ РґРІРёР¶РµРЅРёСЏ РІРєР»СЋС‡РµРЅР°? (0-РќРµС‚, 1-Р”Р°): ";
 				while (true) {
 					in >> camera.motionDetectionEnabled;
 					if (cin.fail() || (camera.motionDetectionEnabled != 0 && camera.motionDetectionEnabled != 1)) {
 						cin.clear();
 						cin.ignore((numeric_limits<streamsize>::max)(), '\n');
-						cout << "Ошибка ввода! Введите 0 или 1: ";
+						cout << "РћС€РёР±РєР° РІРІРѕРґР°! Р’РІРµРґРёС‚Рµ 0 РёР»Рё 1: ";
 					}
 					else {
 						cin.ignore((numeric_limits<streamsize>::max)(), '\n');
@@ -1152,13 +1153,13 @@
 				std::visit([&out](const auto& script) {
 					using T = std::decay_t<decltype(script)>;
 					if constexpr (std::is_same_v<T, DeviceScript<SmartLight>>) {
-						out << "[SmartLight Script]\n";
+						out << "[РЎРєСЂРёРїС‚ СѓРјРЅРѕР№ Р»Р°РјРїС‹]\n";
 					}
 					else if constexpr (std::is_same_v<T, DeviceScript<Thermostat>>) {
-						out << "[Thermostat Script]\n";
+						out << "[РЎРєСЂРёРїС‚ С‚РµСЂРјРѕСЃС‚Р°С‚Р°]\n";
 					}
 					else if constexpr (std::is_same_v<T, DeviceScript<SecurityCamera>>) {
-						out << "[SecurityCamera Script]\n";
+						out << "[РЎРєСЂРёРїС‚ РєР°РјРµСЂС‹ Р±РµР·РѕРїР°СЃРЅРѕСЃС‚Рё]\n";
 					}
 					out << script;  
 					}, variant);
@@ -1198,47 +1199,6 @@
 				}
 				}
 			}
-			else {
-				/*cout << "Select device type for script:\n";
-				cout << "1. Smart Light\n";
-				cout << "2. Thermostat\n";
-				cout << "3. Security Camera\n";
-				cout << "Your choice: ";
-
-				short choice;
-				in >> choice;
-
-				switch (choice) {
-				case 1: {
-					DeviceScript<SmartLight> light_script;
-					cout << "Enter Smart Light script details:\n";
-					in >> light_script;
-					variant = light_script;
-					break;
-				}
-				case 2: {
-					DeviceScript<Thermostat> thermo_script;
-					cout << "Enter Thermostat script details:\n";
-					in >> thermo_script;
-					variant = thermo_script;
-					break;
-				}
-				case 3: {
-					DeviceScript<SecurityCamera> camera_script;
-					cout << "Enter Security Camera script details:\n";
-					in >> camera_script;
-					variant = camera_script;
-					break;
-				}
-				default: {
-					cout << "Invalid choice, creating Smart Light script by default\n";
-					DeviceScript<SmartLight> default_script;
-					in >> default_script;
-					variant = default_script;
-					break;
-				}
-				}*/
-			}
 			return in;
 		}
 
@@ -1265,7 +1225,7 @@
 					return false;
 				}
 				else {
-					throw std::runtime_error("Не удалось создать файл пользователей: " + file_name);
+					throw std::runtime_error("РќРµ СѓРґР°Р»РѕСЃСЊ СЃРѕР·РґР°С‚СЊ С„Р°Р№Р» РїРѕР»СЊР·РѕРІР°С‚РµР»РµР№: " + file_name);
 				}
 			}
 
@@ -1278,7 +1238,6 @@
 
 			User temp_user;
 			while (smartFile >> temp_user) {
-				cout << temp_user;
 				if (user_to_check.getUserDate() != Date() && user_to_check.getLocation() != UserLocation())
 				{
 					if (temp_user.getUserName() == user_to_check.getUserName())
@@ -1307,7 +1266,7 @@
 
 			if (smartFile.fail() && !smartFile.eof()) {
 				smartFile.close();
-				throw std::runtime_error("Ошибка чтения файла пользователей");
+				throw std::runtime_error("РћС€РёР±РєР° С‡С‚РµРЅРёСЏ С„Р°Р№Р»Р° РїРѕР»СЊР·РѕРІР°С‚РµР»РµР№");
 			}
 
 			smartFile.close();
@@ -1319,7 +1278,7 @@
 			smartFile.open(file_name, std::ios::out | std::ios::binary | std::ios::app); // ate
 
 			if (!smartFile.is_open()) {
-				throw std::runtime_error("Не удалось открыть файл для записи: " + file_name);
+				throw std::runtime_error("РќРµ СѓРґР°Р»РѕСЃСЊ РѕС‚РєСЂС‹С‚СЊ С„Р°Р№Р» РґР»СЏ Р·Р°РїРёСЃРё: " + file_name);
 			}
 
 				smartFile << user;
@@ -1327,7 +1286,7 @@
 				if (smartFile.fail()) 
 				{
 					smartFile.close();
-					throw std::runtime_error("Ошибка записи пользователя в файл");
+					throw std::runtime_error("РћС€РёР±РєР° Р·Р°РїРёСЃРё РїРѕР»СЊР·РѕРІР°С‚РµР»СЏ РІ С„Р°Р№Р»");
 				}
 
 			smartFile.close();
@@ -1343,21 +1302,21 @@
 
 			smartFile.seekg(0, ios::beg);
 
-			cout << "\n=== ВСЕ ПОЛЬЗОВАТЕЛИ ===\n";
+			cout << "\n=== Р’РЎР• РџРћР›Р¬Р—РћР’РђРўР•Р›Р ===\n";
 			int user_count = 0;
 			User current_user;
 
 			while (smartFile >> current_user)
 			{
 				user_count++;
-				cout << "\nПользователь #" << user_count << ":\n";
+				cout << "\nРџРѕР»СЊР·РѕРІР°С‚РµР»СЊ #" << user_count << ":\n";
 				cout << current_user;
 				cout << "----------------------------------------\n";
 			}
 
 			smartFile.close();
 
-			cout << "Всего пользователей: " << user_count << "\n";
+			cout << "Р’СЃРµРіРѕ РїРѕР»СЊР·РѕРІР°С‚РµР»РµР№: " << user_count << "\n";
 			
 		}
 
@@ -1387,7 +1346,7 @@
 
 			if (!found)
 			{
-				cout << "Пользователь с именем '" + name + "' не найден";
+				cout << "РџРѕР»СЊР·РѕРІР°С‚РµР»СЊ СЃ РёРјРµРЅРµРј '" + name + "' РЅРµ РЅР°Р№РґРµРЅ";
 				return User();
 			}
 
@@ -1408,7 +1367,7 @@
 			if (file_size <= 0)
 			{
 				smartFile.close();
-				throw runtime_error("Файл пользователей пуст");
+				throw runtime_error("Р¤Р°Р№Р» РїРѕР»СЊР·РѕРІР°С‚РµР»РµР№ РїСѓСЃС‚");
 			}
 
 			smartFile.seekg(0, ios::beg);
@@ -1435,7 +1394,7 @@
 			if (!user_found)
 			{
 				smartFile.close();
-				throw runtime_error("Пользователь не найден");
+				throw runtime_error("РџРѕР»СЊР·РѕРІР°С‚РµР»СЊ РЅРµ РЅР°Р№РґРµРЅ");
 			}
 
 
@@ -1474,7 +1433,7 @@
 
 			std::filesystem::resize_file(file_name, new_size);
 
-			cout << "Пользователь успешно удален\n";
+			cout << "РџРѕР»СЊР·РѕРІР°С‚РµР»СЊ СѓСЃРїРµС€РЅРѕ СѓРґР°Р»РµРЅ\n";
 		}*/
 
 		void FileSystem<User>::removeF(const User& user_to_delete)
@@ -1491,7 +1450,7 @@
 			if (!temp_file.is_open())
 			{
 				in_file.close();
-				throw runtime_error("Не удалось создать временный файл");
+				throw runtime_error("РќРµ СѓРґР°Р»РѕСЃСЊ СЃРѕР·РґР°С‚СЊ РІСЂРµРјРµРЅРЅС‹Р№ С„Р°Р№Р»");
 			}
 
 
@@ -1518,18 +1477,18 @@
 			{
 
 				filesystem::remove(temp_filename);
-				throw runtime_error("Пользователь не найден");
+				throw runtime_error("РџРѕР»СЊР·РѕРІР°С‚РµР»СЊ РЅРµ РЅР°Р№РґРµРЅ");
 			}
 
 			if (!filesystem::remove(file_name))
 			{
 				filesystem::remove(temp_filename);
-				throw runtime_error("Не удалось удалить старый файл");
+				throw runtime_error("РќРµ СѓРґР°Р»РѕСЃСЊ СѓРґР°Р»РёС‚СЊ СЃС‚Р°СЂС‹Р№ С„Р°Р№Р»");
 			}
 
 			filesystem::rename(temp_filename, file_name);
 
-			cout << "Пользователь успешно удален. Осталось пользователей: "
+			cout << "РџРѕР»СЊР·РѕРІР°С‚РµР»СЊ СѓСЃРїРµС€РЅРѕ СѓРґР°Р»РµРЅ. РћСЃС‚Р°Р»РѕСЃСЊ РїРѕР»СЊР·РѕРІР°С‚РµР»РµР№: "
 				<< remaining_users << "\n";
 		}
 
@@ -1539,7 +1498,7 @@
 		{
 			fstream file(file_name, ios::in | ios::out | ios::binary);
 			if (!file.is_open()) {
-				cout << "Файл устройств не найден\n";
+				cout << "Р¤Р°Р№Р» СѓСЃС‚СЂРѕР№СЃС‚РІ РЅРµ РЅР°Р№РґРµРЅ\n";
 				return false;
 			}
 
@@ -1551,7 +1510,7 @@
 			}
 
 			if (devices.empty()) {
-				cout << "Файл устройств пуст\n";
+				cout << "Р¤Р°Р№Р» СѓСЃС‚СЂРѕР№СЃС‚РІ РїСѓСЃС‚\n";
 				file.close();
 				return false;
 			}
@@ -1563,7 +1522,7 @@
 			file.open(file_name, ios::out | ios::trunc | ios::binary);
 
 			if (!file.is_open()) {
-				cout << "Ошибка при открытии файла для записи\n";
+				cout << "РћС€РёР±РєР° РїСЂРё РѕС‚РєСЂС‹С‚РёРё С„Р°Р№Р»Р° РґР»СЏ Р·Р°РїРёСЃРё\n";
 				return false;
 			}
 
@@ -1572,7 +1531,7 @@
 			}
 
 			file.close();
-			cout << "Устройства отсортированы\n";
+			cout << "РЈСЃС‚СЂРѕР№СЃС‚РІР° РѕС‚СЃРѕСЂС‚РёСЂРѕРІР°РЅС‹\n";
 			return true;
 		}
 
@@ -1611,19 +1570,19 @@
 
 			smartFile.open(file_name, ios::in | ios::binary);
 			if (!smartFile.is_open()) {
-				cout << "Файл устройств не найден или пуст\n";
+				cout << "Р¤Р°Р№Р» СѓСЃС‚СЂРѕР№СЃС‚РІ РЅРµ РЅР°Р№РґРµРЅ РёР»Рё РїСѓСЃС‚\n";
 				return 0;
 			}
 
 			smartFile.seekg(0, ios::end);
 			if (smartFile.tellg() == 0) {
-				cout << "У вас пока нет устройств\n";
+				cout << "РЈ РІР°СЃ РїРѕРєР° РЅРµС‚ СѓСЃС‚СЂРѕР№СЃС‚РІ\n";
 				smartFile.close();
 				return 0;
 			}
 			smartFile.seekg(0, ios::beg);
 
-			cout << "=== Ваши устройства ===\n";
+			cout << "Р’Р°С€Рё СѓСЃС‚СЂРѕР№СЃС‚РІР°\n";
 			int device_count = 0;
 
 			while (!smartFile.eof()) {
@@ -1631,9 +1590,9 @@
 				smartFile >> device;
 
 				if (smartFile.good()) {
-					cout << "Устройство " << ++device_count << ":\n";
+					cout << "РЈСЃС‚СЂРѕР№СЃС‚РІРѕ " << ++device_count << ":\n";
 					cout << device;
-					cout << "------------------------\n";
+					cout << string(40, '-') << endl;
 				}
 				else {
 					if (!smartFile.eof()) {
@@ -1645,7 +1604,7 @@
 				if (smartFile.eof()) break;
 			}
 
-			cout << "Всего устройств: " << device_count << "\n";
+			cout << "Р’СЃРµРіРѕ СѓСЃС‚СЂРѕР№СЃС‚РІ: " << device_count << "\n\n";
 			
 			smartFile.close();
 			return device_count;
@@ -1654,23 +1613,23 @@
 		DeviceVariant FileSystem<DeviceVariant>::chooseCertainDevice(const int count)
 		{
 			if (count <= 0) {
-				throw std::runtime_error("Нет доступных устройств для выбора");
+				throw std::runtime_error("РќРµС‚ РґРѕСЃС‚СѓРїРЅС‹С… СѓСЃС‚СЂРѕР№СЃС‚РІ РґР»СЏ РІС‹Р±РѕСЂР°");
 			}
 
 			smartFile.open(file_name, ios::in | ios::binary);
 			if (!smartFile.is_open()) {
-				throw std::runtime_error("Не удалось открыть файл устройств: " + file_name);
+				throw std::runtime_error("РќРµ СѓРґР°Р»РѕСЃСЊ РѕС‚РєСЂС‹С‚СЊ С„Р°Р№Р» СѓСЃС‚СЂРѕР№СЃС‚РІ: " + file_name);
 			}
 
 			int choice;
-			cout << "Выберите устройство (1-" << count << "): ";
+			cout << "Р’С‹Р±РµСЂРёС‚Рµ СѓСЃС‚СЂРѕР№СЃС‚РІРѕ (1-" << count << "): ";
 
 			while (true) {
 				cin >> choice;
 				if (cin.fail() || choice < 1 || choice > count) {
 					cin.clear();
 					cin.ignore((numeric_limits<streamsize>::max)(), '\n');
-					cout << "Ошибка ввода! Введите число от 1 до " << count << ": ";
+					cout << "РћС€РёР±РєР° РІРІРѕРґР°! Р’РІРµРґРёС‚Рµ С‡РёСЃР»Рѕ РѕС‚ 1 РґРѕ " << count << ": ";
 				}
 				else {
 					cin.ignore((numeric_limits<streamsize>::max)(), '\n');
@@ -1689,7 +1648,7 @@
 			smartFile.close();
 
 			if (current != choice) {
-				throw std::runtime_error("Ошибка: не удалось прочитать выбранное устройство");
+				throw std::runtime_error("РћС€РёР±РєР°: РЅРµ СѓРґР°Р»РѕСЃСЊ РїСЂРѕС‡РёС‚Р°С‚СЊ РІС‹Р±СЂР°РЅРЅРѕРµ СѓСЃС‚СЂРѕР№СЃС‚РІРѕ");
 			}
 
 			return selected_device;
@@ -1714,7 +1673,7 @@
 			smartFile.open(file_name, std::ios::out | std::ios::binary | std::ios::app);
 
 			if (!smartFile.is_open()) {
-				throw std::runtime_error("Не удалось открыть файл для записи: " + file_name);
+				throw std::runtime_error("РќРµ СѓРґР°Р»РѕСЃСЊ РѕС‚РєСЂС‹С‚СЊ С„Р°Р№Р» РґР»СЏ Р·Р°РїРёСЃРё: " + file_name);
 			}
 
 			smartFile << device;
@@ -1722,7 +1681,7 @@
 			if (smartFile.fail())
 			{
 				smartFile.close();
-				throw std::runtime_error("Ошибка записи устройства в файл");
+				throw std::runtime_error("РћС€РёР±РєР° Р·Р°РїРёСЃРё СѓСЃС‚СЂРѕР№СЃС‚РІР° РІ С„Р°Р№Р»");
 			}
 
 			smartFile.close();
@@ -1730,21 +1689,15 @@
 
 		DeviceVariant FileSystem<DeviceVariant>::removeF(int pos)
 		{
-			if (pos < 1) {
-				throw std::invalid_argument("Позиция должна быть положительным числом");
-			}
 
 			smartFile.open(file_name, ios::in | ios::out | ios::binary);
 			if (!smartFile.is_open()) {
-				throw std::runtime_error("Не удалось открыть файл устройств: " + file_name);
+				throw std::runtime_error("РќРµ СѓРґР°Р»РѕСЃСЊ РѕС‚РєСЂС‹С‚СЊ С„Р°Р№Р» СѓСЃС‚СЂРѕР№СЃС‚РІ: " + file_name);
 			}
 
 			smartFile.seekg(0, ios::end);
 			std::streampos fileSize = smartFile.tellg();
-			if (fileSize <= 0) {
-				smartFile.close();
-				throw std::runtime_error("Файл устройств пуст");
-			}
+
 			smartFile.seekg(0, ios::beg);
 
 			DeviceVariant device_to_remove;
@@ -1758,7 +1711,7 @@
 				DeviceVariant temp;
 				if (!(smartFile >> temp)) {
 					smartFile.close();
-					throw std::runtime_error("Ошибка чтения устройства на позиции " + std::to_string(current_pos));
+					throw std::runtime_error("РћС€РёР±РєР° С‡С‚РµРЅРёСЏ СѓСЃС‚СЂРѕР№СЃС‚РІР° РЅР° РїРѕР·РёС†РёРё " + std::to_string(current_pos));
 				}
 				current_pos++;
 			}
@@ -1768,7 +1721,7 @@
 
 			if (!(smartFile >> device_to_remove)) {
 				smartFile.close();
-				throw std::runtime_error("Не удалось прочитать устройство для удаления на позиции " + std::to_string(pos));
+				throw std::runtime_error("РќРµ СѓРґР°Р»РѕСЃСЊ РїСЂРѕС‡РёС‚Р°С‚СЊ СѓСЃС‚СЂРѕР№СЃС‚РІРѕ РґР»СЏ СѓРґР°Р»РµРЅРёСЏ РЅР° РїРѕР·РёС†РёРё " + std::to_string(pos));
 			}
 
 
@@ -1810,26 +1763,26 @@
 
 			std::filesystem::resize_file(file_name, new_size);
 
-			cout << "Устройство на позиции " << pos << " успешно удалено\n";
+			cout << "РЈСЃС‚СЂРѕР№СЃС‚РІРѕ РЅР° РїРѕР·РёС†РёРё " << pos << " СѓСЃРїРµС€РЅРѕ СѓРґР°Р»РµРЅРѕ\n";
 			return device_to_remove;
 		}
 
 		/*DeviceVariant FileSystem<DeviceVariant>::editF(int pos, const DeviceVariant& new_device)
 		{
 			if (pos < 1) {
-				throw std::invalid_argument("Позиция должна быть положительным числом");
+				throw std::invalid_argument("РџРѕР·РёС†РёСЏ РґРѕР»Р¶РЅР° Р±С‹С‚СЊ РїРѕР»РѕР¶РёС‚РµР»СЊРЅС‹Рј С‡РёСЃР»РѕРј");
 			}
 
 			smartFile.open(file_name, ios::in | ios::out | ios::binary);
 			if (!smartFile.is_open()) {
-				throw std::runtime_error("Не удалось открыть файл устройств: " + file_name);
+				throw std::runtime_error("РќРµ СѓРґР°Р»РѕСЃСЊ РѕС‚РєСЂС‹С‚СЊ С„Р°Р№Р» СѓСЃС‚СЂРѕР№СЃС‚РІ: " + file_name);
 			}
 
 			smartFile.seekg(0, ios::end);
 			std::streampos fileSize = smartFile.tellg();
 			if (fileSize <= 0) {
 				smartFile.close();
-				throw std::runtime_error("Файл устройств пуст");
+				throw std::runtime_error("Р¤Р°Р№Р» СѓСЃС‚СЂРѕР№СЃС‚РІ РїСѓСЃС‚");
 			}
 			smartFile.seekg(0, ios::beg);
 
@@ -1843,7 +1796,7 @@
 				DeviceVariant temp;
 				if (!(smartFile >> temp)) {
 					smartFile.close();
-					throw std::runtime_error("Ошибка чтения устройства на позиции " + std::to_string(current_pos));
+					throw std::runtime_error("РћС€РёР±РєР° С‡С‚РµРЅРёСЏ СѓСЃС‚СЂРѕР№СЃС‚РІР° РЅР° РїРѕР·РёС†РёРё " + std::to_string(current_pos));
 				}
 				current_pos++;
 			}
@@ -1854,7 +1807,7 @@
 
 			if (!(smartFile >> old_device)) {
 				smartFile.close();
-				throw std::runtime_error("Не удалось прочитать устройство для редактирования на позиции " + std::to_string(pos));
+				throw std::runtime_error("РќРµ СѓРґР°Р»РѕСЃСЊ РїСЂРѕС‡РёС‚Р°С‚СЊ СѓСЃС‚СЂРѕР№СЃС‚РІРѕ РґР»СЏ СЂРµРґР°РєС‚РёСЂРѕРІР°РЅРёСЏ РЅР° РїРѕР·РёС†РёРё " + std::to_string(pos));
 			}
 
 			smartFile.seekp(edit_position);
@@ -1864,8 +1817,8 @@
 
 			smartFile.close();
 
-			cout << "Устройство на позиции " << pos << " успешно отредактировано\n";
-			cout << "Возвращаемое старое устройство можно использовать для удаления в сценариях при необходимости\n";
+			cout << "РЈСЃС‚СЂРѕР№СЃС‚РІРѕ РЅР° РїРѕР·РёС†РёРё " << pos << " СѓСЃРїРµС€РЅРѕ РѕС‚СЂРµРґР°РєС‚РёСЂРѕРІР°РЅРѕ\n";
+			cout << "Р’РѕР·РІСЂР°С‰Р°РµРјРѕРµ СЃС‚Р°СЂРѕРµ СѓСЃС‚СЂРѕР№СЃС‚РІРѕ РјРѕР¶РЅРѕ РёСЃРїРѕР»СЊР·РѕРІР°С‚СЊ РґР»СЏ СѓРґР°Р»РµРЅРёСЏ РІ СЃС†РµРЅР°СЂРёСЏС… РїСЂРё РЅРµРѕР±С…РѕРґРёРјРѕСЃС‚Рё\n";
 
 			return old_device;
 		}*/
@@ -1873,19 +1826,19 @@
 		/*DeviceVariant FileSystem<DeviceVariant>::editF(const DeviceVariant& old_device, const DeviceVariant& new_device)
 		{
 			if (pos < 1) {
-				throw std::invalid_argument("Позиция должна быть положительным числом");
+				throw std::invalid_argument("РџРѕР·РёС†РёСЏ РґРѕР»Р¶РЅР° Р±С‹С‚СЊ РїРѕР»РѕР¶РёС‚РµР»СЊРЅС‹Рј С‡РёСЃР»РѕРј");
 			}
 
 			std::ifstream inFile(file_name, std::ios::binary);
 			if (!inFile.is_open()) {
-				throw std::runtime_error("Не удалось открыть файл устройств: " + file_name);
+				throw std::runtime_error("РќРµ СѓРґР°Р»РѕСЃСЊ РѕС‚РєСЂС‹С‚СЊ С„Р°Р№Р» СѓСЃС‚СЂРѕР№СЃС‚РІ: " + file_name);
 			}
 
 			std::string temp_file_name = file_name + ".tmp";
 			std::ofstream outFile(temp_file_name, std::ios::binary);
 			if (!outFile.is_open()) {
 				inFile.close();
-				throw std::runtime_error("Не удалось создать временный файл");
+				throw std::runtime_error("РќРµ СѓРґР°Р»РѕСЃСЊ СЃРѕР·РґР°С‚СЊ РІСЂРµРјРµРЅРЅС‹Р№ С„Р°Р№Р»");
 			}
 
 			DeviceVariant old_device;
@@ -1903,7 +1856,7 @@
 						inFile.close();
 						outFile.close();
 						std::filesystem::remove(temp_file_name);
-						throw std::runtime_error("Ошибка чтения устройства на позиции " + std::to_string(pos));
+						throw std::runtime_error("РћС€РёР±РєР° С‡С‚РµРЅРёСЏ СѓСЃС‚СЂРѕР№СЃС‚РІР° РЅР° РїРѕР·РёС†РёРё " + std::to_string(pos));
 					}
 
 					device_found = true;
@@ -1913,7 +1866,7 @@
 						inFile.close();
 						outFile.close();
 						std::filesystem::remove(temp_file_name);
-						throw std::runtime_error("Ошибка записи нового устройства во временный файл");
+						throw std::runtime_error("РћС€РёР±РєР° Р·Р°РїРёСЃРё РЅРѕРІРѕРіРѕ СѓСЃС‚СЂРѕР№СЃС‚РІР° РІРѕ РІСЂРµРјРµРЅРЅС‹Р№ С„Р°Р№Р»");
 					}
 				}
 				else {
@@ -1925,7 +1878,7 @@
 						inFile.close();
 						outFile.close();
 						std::filesystem::remove(temp_file_name);
-						throw std::runtime_error("Ошибка чтения устройства на позиции " + std::to_string(current_pos));
+						throw std::runtime_error("РћС€РёР±РєР° С‡С‚РµРЅРёСЏ СѓСЃС‚СЂРѕР№СЃС‚РІР° РЅР° РїРѕР·РёС†РёРё " + std::to_string(current_pos));
 					}
 
 					outFile << device;
@@ -1934,7 +1887,7 @@
 						inFile.close();
 						outFile.close();
 						std::filesystem::remove(temp_file_name);
-						throw std::runtime_error("Ошибка записи устройства во временный файл");
+						throw std::runtime_error("РћС€РёР±РєР° Р·Р°РїРёСЃРё СѓСЃС‚СЂРѕР№СЃС‚РІР° РІРѕ РІСЂРµРјРµРЅРЅС‹Р№ С„Р°Р№Р»");
 					}
 				}
 			}
@@ -1944,14 +1897,14 @@
 
 			if (!device_found) {
 				std::filesystem::remove(temp_file_name);
-				throw std::runtime_error("Устройство на позиции " + std::to_string(pos) + " не найдено");
+				throw std::runtime_error("РЈСЃС‚СЂРѕР№СЃС‚РІРѕ РЅР° РїРѕР·РёС†РёРё " + std::to_string(pos) + " РЅРµ РЅР°Р№РґРµРЅРѕ");
 			}
 
 
 				std::filesystem::copy(temp_file_name, file_name, std::filesystem::copy_options::overwrite_existing);
 				std::filesystem::remove(temp_file_name);
 		
-			std::cout << "Устройство на позиции " << pos << " успешно отредактировано\n";
+			std::cout << "РЈСЃС‚СЂРѕР№СЃС‚РІРѕ РЅР° РїРѕР·РёС†РёРё " << pos << " СѓСЃРїРµС€РЅРѕ РѕС‚СЂРµРґР°РєС‚РёСЂРѕРІР°РЅРѕ\n";
 			return old_device;
 		}*/
 
@@ -1969,7 +1922,7 @@
 			if (!tempFile.is_open())
 			{
 				smartFile.close();
-				throw runtime_error("Не удалось создать временный файл.");
+				throw runtime_error("РќРµ СѓРґР°Р»РѕСЃСЊ СЃРѕР·РґР°С‚СЊ РІСЂРµРјРµРЅРЅС‹Р№ С„Р°Р№Р».");
 			}
 
 			bool found = false;
@@ -1984,7 +1937,6 @@
 				}
 				else
 				{
-
 					tempFile << current_device;
 				}
 			}
@@ -1992,33 +1944,27 @@
 			smartFile.close();
 			tempFile.close();
 
-			if (found)
-			{
+
 				if (!filesystem::remove(file_name))
 				{
 					filesystem::remove(temp_file_name);
-					throw runtime_error("Не удалось удалить старый файл.");
+					throw runtime_error("РќРµ СѓРґР°Р»РѕСЃСЊ СѓРґР°Р»РёС‚СЊ СЃС‚Р°СЂС‹Р№ С„Р°Р№Р».");
 				}
 
 				filesystem::rename(temp_file_name, file_name);
 				return;
-			}
-			else
-			{
-				filesystem::remove(temp_file_name);
-				throw runtime_error("Устройство не найдено во время операции редактирования.");
-			}
+
 		}
 
 		void FileSystem<DeviceVariant>::searchF(const string& dev_name)
 		{
 			std::ifstream file(file_name, ios::binary);
 			if (!file.is_open()) {
-				cout << "Файл устройств не найден\n";
+				cout << "Р¤Р°Р№Р» СѓСЃС‚СЂРѕР№СЃС‚РІ РЅРµ РЅР°Р№РґРµРЅ\n";
 				return;
 			}
 
-			cout << "Результаты поиска: '" << dev_name << "' \n";
+			cout << "Р РµР·СѓР»СЊС‚Р°С‚С‹ РїРѕРёСЃРєР°: '" << dev_name << "' \n";
 			int found_count = 0;
 			DeviceVariant device;
 
@@ -2027,16 +1973,16 @@
 						string title = dev.getTitle();
 
 						if (title.find(dev_name) != string::npos) {
-							cout << "Найденное устройство " << ++found_count << ":\n";
+							cout << "РќР°Р№РґРµРЅРЅРѕРµ СѓСЃС‚СЂРѕР№СЃС‚РІРѕ " << ++found_count << ":\n";
 							cout << dev;
-							cout << "------------------------\n";
+							cout << string(40, '-') << endl;
 						}
 					}
 					, device);
 			}
 
 			if (found_count == 0) {
-				cout << "Устройства не найдены\n";
+				cout << "РЈСЃС‚СЂРѕР№СЃС‚РІР° РЅРµ РЅР°Р№РґРµРЅС‹\n";
 			}
 		}
 
@@ -2045,35 +1991,35 @@
 		{
 			std::ifstream file(file_name, ios::binary);
 			if (!file.is_open()) {
-				cout << "Файл устройств не найден\n";
+				cout << "Р¤Р°Р№Р» СѓСЃС‚СЂРѕР№СЃС‚РІ РЅРµ РЅР°Р№РґРµРЅ\n";
 				return;
 			}
 
 			file.seekg(0, ios::end);
 			if (file.tellg() == 0) {
-				cout << "Файл устройств пуст\n";
+				cout << "Р¤Р°Р№Р» СѓСЃС‚СЂРѕР№СЃС‚РІ РїСѓСЃС‚\n";
 				file.close();
 				return;
 			}
 			file.seekg(0, ios::beg);
 
-			cout << " Фильтр: " << filter_name << " \n";
+			cout << " Р¤РёР»СЊС‚СЂ: " << filter_name << " \n";
 			int filtered_count = 0;
 			DeviceVariant device;
 
 			while (file >> device) {
 				if (predicate(device)) {
-					cout << "Устройство " << ++filtered_count << ":\n";
+					cout << "РЈСЃС‚СЂРѕР№СЃС‚РІРѕ " << ++filtered_count << ":\n";
 					cout << device;
-					cout << "------------------------\n";
+					cout << string(40, '-') << endl;
 				}
 			}
 
 			if (filtered_count == 0) {
-				cout << "Устройства не найдены\n";
+				cout << "РЈСЃС‚СЂРѕР№СЃС‚РІР° РЅРµ РЅР°Р№РґРµРЅС‹\n";
 			}
 			else {
-				cout << "Найдено устройств: " << filtered_count << "\n";
+				cout << "РќР°Р№РґРµРЅРѕ СѓСЃС‚СЂРѕР№СЃС‚РІ: " << filtered_count << "\n";
 			}
 
 			file.close();
@@ -2091,16 +2037,17 @@
 			if (!report_file.is_open())
 			{
 				smartFile.close();
-				throw runtime_error("Не удалось открыть файл отчета");
+				throw runtime_error("РќРµ СѓРґР°Р»РѕСЃСЊ РѕС‚РєСЂС‹С‚СЊ С„Р°Р№Р» РѕС‚С‡РµС‚Р°");
 			}
 
-			report_file << "\nУСТРОЙСТВА:\n";
-			report_file << "============================\n";
+			report_file << string(40, '=') << "\n";
+			report_file << "РЈРЎРўР РћР™РЎРўР’Рђ:\n";
+			report_file << string(40, '=') << "\n";
 
 			smartFile.seekg(0, ios::end);
 			if (smartFile.tellg() == 0)
 			{
-				report_file << "Нет подключенных устройств\n";
+				report_file << "РќРµС‚ РїРѕРґРєР»СЋС‡РµРЅРЅС‹С… СѓСЃС‚СЂРѕР№СЃС‚РІ\n";
 				smartFile.close();
 				report_file.close();
 				return;
@@ -2123,18 +2070,19 @@
 			for (const auto& dev : devices)
 			{
 				device_count++;
-				report_file << "\nУстройство #" << device_count << ":\n";
+				report_file << "\nРЈСЃС‚СЂРѕР№СЃС‚РІРѕ #" << device_count << ":\n";
 
 				stringstream device_ss;
 				device_ss << dev;
 				report_file << device_ss.str();
 
-				report_file << "----------------------------------------\n";
+				report_file << string(40, '-') << "\n";
 			}
 
-			report_file << "\nСТАТИСТИКА УСТРОЙСТВ:\n";
-			report_file << "============================\n";
-			report_file << "Всего устройств: " << devices.size() << "\n";
+			report_file << string(40, '=') << "\n";
+			report_file << "РЎРўРђРўРРЎРўРРљРђ РЈРЎРўР РћР™РЎРўР’:\n";
+			report_file << string(40, '=') << "\n";
+			report_file << "Р’СЃРµРіРѕ СѓСЃС‚СЂРѕР№СЃС‚РІ: " << devices.size() << "\n";
 
 			int lights = 0, thermos = 0, cameras = 0, online = 0;
 
@@ -2157,10 +2105,10 @@
 				}
 			}
 
-			report_file << "  • Умных ламп: " << lights << "\n";
-			report_file << "  • Термостатов: " << thermos << "\n";
-			report_file << "  • Камер безопасности: " << cameras << "\n";
-			report_file << "  • Онлайн: " << online << " из " << devices.size() << " ("
+			report_file << "  вЂў РЈРјРЅС‹С… Р»Р°РјРї: " << lights << "\n";
+			report_file << "  вЂў РўРµСЂРјРѕСЃС‚Р°С‚РѕРІ: " << thermos << "\n";
+			report_file << "  вЂў РљР°РјРµСЂ Р±РµР·РѕРїР°СЃРЅРѕСЃС‚Рё: " << cameras << "\n";
+			report_file << "  вЂў РћРЅР»Р°Р№РЅ: " << online << " РёР· " << devices.size() << " ("
 				<< fixed << setprecision(1)
 				<< (devices.size() > 0 ? (online * 100.0 / devices.size()) : 0)
 				<< "%)\n";
@@ -2177,13 +2125,13 @@
 		void FileSystem<DeviceScriptVariant>::writeF(queue<DeviceScriptVariant>& queue)
 		{
 			if (queue.empty()) {
-				cout << "Очередь сценариев пуста\n";
+				cout << "РћС‡РµСЂРµРґСЊ СЃС†РµРЅР°СЂРёРµРІ РїСѓСЃС‚Р°\n";
 				return;
 			}
 
 			smartFile.open(file_name, ios::out | ios::binary | ios::app);
 			if (!smartFile.is_open()) {
-				throw runtime_error("Не удалось открыть файл сценариев для записи");
+				throw runtime_error("РќРµ СѓРґР°Р»РѕСЃСЊ РѕС‚РєСЂС‹С‚СЊ С„Р°Р№Р» СЃС†РµРЅР°СЂРёРµРІ РґР»СЏ Р·Р°РїРёСЃРё");
 			}
 
 			while (!queue.empty()) {
@@ -2192,21 +2140,21 @@
 			}
 
 			smartFile.close();
-			cout << "Очередь сценариев успешно записана в файл\n";
+			cout << "РћС‡РµСЂРµРґСЊ СЃС†РµРЅР°СЂРёРµРІ СѓСЃРїРµС€РЅРѕ Р·Р°РїРёСЃР°РЅР° РІ С„Р°Р№Р»\n";
 		}
 
 		void FileSystem<DeviceScriptVariant>::removeF(const User& user)
 		{
 			fstream file(file_name, ios::in | ios::out | ios::binary);
 			if (!file.is_open()) {
-				cout << "Файл сценариев не найден\n";
+				cout << "Р¤Р°Р№Р» СЃС†РµРЅР°СЂРёРµРІ РЅРµ РЅР°Р№РґРµРЅ\n";
 				return;
 			}
 
 			file.seekg(0, ios::end);
 			std::streampos fileSize = file.tellg();
 			if (fileSize <= 0) {
-				cout << "Файл сценариев пуст\n";
+				cout << "Р¤Р°Р№Р» СЃС†РµРЅР°СЂРёРµРІ РїСѓСЃС‚\n";
 				file.close();
 				return;
 			}
@@ -2271,7 +2219,7 @@
 			file.close();
 
 			if (removed_count == 0) {
-				cout << "Сценарии пользователя " << user.getUserName() << " не найдены\n";
+				cout << "РЎС†РµРЅР°СЂРёРё РїРѕР»СЊР·РѕРІР°С‚РµР»СЏ " << user.getUserName() << " РЅРµ РЅР°Р№РґРµРЅС‹\n";
 				return;
 			}
 
@@ -2279,7 +2227,7 @@
 				std::filesystem::resize_file(file_name, write_pos);
 			}
 
-			cout << "Удалено сценариев пользователя " << user.getUserName() << ": " << removed_count << "\n";
+			cout << "РЈРґР°Р»РµРЅРѕ СЃС†РµРЅР°СЂРёРµРІ РїРѕР»СЊР·РѕРІР°С‚РµР»СЏ " << user.getUserName() << ": " << removed_count << "\n";
 		}
 
 		std::queue<DeviceScriptVariant> FileSystem<DeviceScriptVariant>::unloadScripts(const User& user)
@@ -2288,19 +2236,19 @@
 
 			smartFile.open(file_name, ios::in | ios::binary);
 			if (!smartFile.is_open()) {
-				cout << "Файл сценариев не найден\n";
+				cout << "Р¤Р°Р№Р» СЃС†РµРЅР°СЂРёРµРІ РЅРµ РЅР°Р№РґРµРЅ\n";
 				return user_scripts;
 			}
 
 			smartFile.seekg(0, ios::end);
 			if (smartFile.tellg() == 0) {
-				cout << "Файл сценариев пуст\n";
+				cout << "Р¤Р°Р№Р» СЃС†РµРЅР°СЂРёРµРІ РїСѓСЃС‚\n";
 				smartFile.close();
 				return user_scripts;
 			}
 			smartFile.seekg(0, ios::beg);
 
-			cout << "Выгрузка сценариев пользователя " << user.getUserName() << "...\n";
+			cout << "Р’С‹РіСЂСѓР·РєР° СЃС†РµРЅР°СЂРёРµРІ РїРѕР»СЊР·РѕРІР°С‚РµР»СЏ " << user.getUserName() << "...\n";
 			int loaded_count = 0;
 
 			while (!smartFile.eof()) {
@@ -2337,7 +2285,7 @@
 				return user_scripts;
 			}
 			smartFile.close();
-			cout << "Выгружено сценариев: " << loaded_count << "\n";
+			cout << "Р’С‹РіСЂСѓР¶РµРЅРѕ СЃС†РµРЅР°СЂРёРµРІ: " << loaded_count << "\n";
 			return user_scripts;
 		}
 
@@ -2353,7 +2301,7 @@
 		void SmartHomeInteraction::removeScript(const DeviceVariant& target_device)
 		{
 			if (script_subsequence.empty()) {
-				cout << "Очередь сценариев пуста\n";
+				cout << "РћС‡РµСЂРµРґСЊ СЃС†РµРЅР°СЂРёРµРІ РїСѓСЃС‚Р°\n";
 				return;
 			}
 
@@ -2380,28 +2328,28 @@
 			script_subsequence = temp_queue;
 
 			if (removed_count > 0) {
-				cout << "Удалено сценариев для указанного устройства: " << removed_count << "\n";
+				cout << "РЈРґР°Р»РµРЅРѕ СЃС†РµРЅР°СЂРёРµРІ РґР»СЏ СѓРєР°Р·Р°РЅРЅРѕРіРѕ СѓСЃС‚СЂРѕР№СЃС‚РІР°: " << removed_count << "\n";
 			}
 			else {
-				cout << "Сценарии для указанного устройства не найдены\n";
+				cout << "РЎС†РµРЅР°СЂРёРё РґР»СЏ СѓРєР°Р·Р°РЅРЅРѕРіРѕ СѓСЃС‚СЂРѕР№СЃС‚РІР° РЅРµ РЅР°Р№РґРµРЅС‹\n";
 			}
 		}
 
 		int SmartHomeInteraction::printScripts()
 		{
 			if (script_subsequence.empty()) {
-				cout << "Очередь сценариев пуста.\n";
+				cout << "РћС‡РµСЂРµРґСЊ СЃС†РµРЅР°СЂРёРµРІ РїСѓСЃС‚Р°.\n";
 				return 0;
 			}
 
-			cout << " Очередь сценариев \n";
-			cout << "Всего сценариев: " << script_subsequence.size() << "\n\n";
+			cout << "РћС‡РµСЂРµРґСЊ СЃС†РµРЅР°СЂРёРµРІ\n";
+			cout << "Р’СЃРµРіРѕ СЃС†РµРЅР°СЂРёРµРІ: " << script_subsequence.size() << "\n\n";
 
 			std::queue<DeviceScriptVariant> temp_queue = script_subsequence;
 			int counter = 0;
 
 			while (!temp_queue.empty()) {
-				cout << "--- Сценарий " << ++counter << " ---\n";
+				cout<< string(17, '-') << "РЎС†РµРЅР°СЂРёР№ " << ++counter << string(17, '-') << "\n";
 				cout << temp_queue.front() << "\n";
 				temp_queue.pop();
 			}
@@ -2416,7 +2364,7 @@
 
 			if (script_count == 0)
 			{
-				cout << "Нет сценариев для редактирования\n";
+				cout << "РќРµС‚ СЃС†РµРЅР°СЂРёРµРІ РґР»СЏ СЂРµРґР°РєС‚РёСЂРѕРІР°РЅРёСЏ\n";
 				return;
 			}
 
@@ -2430,13 +2378,13 @@
 			}
 
 			int choice;
-			cout << "\nВыберите сценарий для редактирования (1-" << script_count << "): ";
+			cout << "\nР’С‹Р±РµСЂРёС‚Рµ СЃС†РµРЅР°СЂРёР№ РґР»СЏ СЂРµРґР°РєС‚РёСЂРѕРІР°РЅРёСЏ (1-" << script_count << "): ";
 			while (true) {
 				cin >> choice;
 				if (cin.fail() || choice < 1 || choice > script_count) {
 					cin.clear();
 					cin.ignore((numeric_limits<streamsize>::max)(), '\n');
-					cout << "Ошибка ввода! Введите число от 1 до " << script_count << ": ";
+					cout << "РћС€РёР±РєР° РІРІРѕРґР°! Р’РІРµРґРёС‚Рµ С‡РёСЃР»Рѕ РѕС‚ 1 РґРѕ " << script_count << ": ";
 				}
 				else {
 					cin.ignore((numeric_limits<streamsize>::max)(), '\n');
@@ -2446,25 +2394,25 @@
 
 			DeviceScriptVariant& selected_script = scripts_vector[choice - 1];
 
-			cout << "\nРЕДАКТИРОВАНИЕ СЦЕНАРИЯ\n";
-			cout << "Текущие данные сценария:\n";
+			cout << "\nР Р•Р”РђРљРўРР РћР’РђРќРР• РЎР¦Р•РќРђР РРЇ\n";
+			cout << "РўРµРєСѓС‰РёРµ РґР°РЅРЅС‹Рµ СЃС†РµРЅР°СЂРёСЏ:\n";
 
 			std::visit([](const auto& script) {
 				cout << script << "\n";
 				}, selected_script);
 
-			cout << "\nВведите новое описание сценария: ";
+			cout << "\nР’РІРµРґРёС‚Рµ РЅРѕРІРѕРµ РѕРїРёСЃР°РЅРёРµ СЃС†РµРЅР°СЂРёСЏ: ";
 			string new_script;
 			getline(cin,new_script);
 
-			cout << "Введите новую длительность (в минутах): ";
+			cout << "Р’РІРµРґРёС‚Рµ РЅРѕРІСѓСЋ РґР»РёС‚РµР»СЊРЅРѕСЃС‚СЊ (РІ РјРёРЅСѓС‚Р°С…): ";
 			short new_duration;
 			cin >> new_duration;
 			cin.ignore();
 
 			if (new_duration <= 0)
 			{
-				cout << "Длительность должна быть положительным числом. Изменения отменены.\n";
+				cout << "Р”Р»РёС‚РµР»СЊРЅРѕСЃС‚СЊ РґРѕР»Р¶РЅР° Р±С‹С‚СЊ РїРѕР»РѕР¶РёС‚РµР»СЊРЅС‹Рј С‡РёСЃР»РѕРј. РР·РјРµРЅРµРЅРёСЏ РѕС‚РјРµРЅРµРЅС‹.\n";
 				return;
 			}
 
@@ -2483,7 +2431,7 @@
 			script_subsequence = updated_queue;
 
 
-			cout << "Сценарий успешно отредактирован!\n";
+			cout << "РЎС†РµРЅР°СЂРёР№ СѓСЃРїРµС€РЅРѕ РѕС‚СЂРµРґР°РєС‚РёСЂРѕРІР°РЅ!\n";
 		}
 
 		DeviceVariant SmartHomeInteraction::chooseDevice()
@@ -2492,14 +2440,14 @@
 			while (is_running)
 			{
 				showDeviceCatalogHeaderMenu();
-				std::cout << "Выберите тип устройства:" << std::endl;
+				std::cout << "Р’С‹Р±РµСЂРёС‚Рµ С‚РёРї СѓСЃС‚СЂРѕР№СЃС‚РІР°:" << std::endl;
 				short choice;
 				while (true) {
 					cin >> choice;
 					if (cin.fail()) {
 						cin.clear();
 						cin.ignore((numeric_limits<streamsize>::max)(), '\n');
-						cout << "Ошибка ввода! Введите число: ";
+						cout << "РћС€РёР±РєР° РІРІРѕРґР°! Р’РІРµРґРёС‚Рµ С‡РёСЃР»Рѕ: ";
 					}
 					else {
 						cin.ignore((numeric_limits<streamsize>::max)(), '\n');
@@ -2526,7 +2474,7 @@
 				}
 				default:
 				{
-					cout << "Вы ввели неверный выбор, попробуйте еще раз." << std::endl;
+					cout << "Р’С‹ РІРІРµР»Рё РЅРµРІРµСЂРЅС‹Р№ РІС‹Р±РѕСЂ, РїРѕРїСЂРѕР±СѓР№С‚Рµ РµС‰Рµ СЂР°Р·." << std::endl;
 					break;
 				}
 				}
@@ -2555,27 +2503,27 @@
 				return camera;
 			}
 			default:
-				throw runtime_error("Неверный тип устройства");
+				throw runtime_error("РќРµРІРµСЂРЅС‹Р№ С‚РёРї СѓСЃС‚СЂРѕР№СЃС‚РІР°");
 			}
 		}
 
 		void SmartHomeInteraction::showSHOHeaderMenu()
 		{
-			cout << "Меню SmartHome:" << endl
-				<< "--> 1. Добавление устройства на аккаунт." << endl
-				<< "--> 2. Редактирование устройства." << endl
-				<< "--> 3. Удаление устройства." << endl
-				<< "--> 4. Посмотреть информацию о смарт-устройствах." << endl
-				<< "--> 5. Сортировка устройств (по названию)." << endl
-				<< "--> 6. Поиск устройств (по названию)." << endl
-				<< "--> 7. Создание отчета." << endl
-				<< "--> 8. Фильтрация устройств (online)." << endl
-				<< "--> 9. Фильтрация устройств (по дате)." << endl
-				<< "--> 10. Создание сценария." << endl
-				<< "--> 11. Удаление сценария." << endl
-				<< "--> 12. Редактирование сценария." << endl
-				<< "--> 13. Посмотреть информацию о всех сценариях." << endl
-				<< "--> 0. Выход..." << endl << ">>";
+			cout << "РњРµРЅСЋ SmartHome:" << endl
+				<< "-->  1. Р”РѕР±Р°РІР»РµРЅРёРµ СѓСЃС‚СЂРѕР№СЃС‚РІР° РЅР° Р°РєРєР°СѓРЅС‚." << endl
+				<< "-->  2. Р РµРґР°РєС‚РёСЂРѕРІР°РЅРёРµ СѓСЃС‚СЂРѕР№СЃС‚РІР°." << endl
+				<< "-->  3. РЈРґР°Р»РµРЅРёРµ СѓСЃС‚СЂРѕР№СЃС‚РІР°." << endl
+				<< "-->  4. РџРѕСЃРјРѕС‚СЂРµС‚СЊ РёРЅС„РѕСЂРјР°С†РёСЋ Рѕ СЃРјР°СЂС‚-СѓСЃС‚СЂРѕР№СЃС‚РІР°С…." << endl
+				<< "-->  5. РЎРѕСЂС‚РёСЂРѕРІРєР° СѓСЃС‚СЂРѕР№СЃС‚РІ (РїРѕ РЅР°Р·РІР°РЅРёСЋ)." << endl
+				<< "-->  6. РџРѕРёСЃРє СѓСЃС‚СЂРѕР№СЃС‚РІ (РїРѕ РЅР°Р·РІР°РЅРёСЋ)." << endl
+				<< "-->  7. РЎРѕР·РґР°РЅРёРµ РѕС‚С‡РµС‚Р°." << endl
+				<< "-->  8. Р¤РёР»СЊС‚СЂР°С†РёСЏ СѓСЃС‚СЂРѕР№СЃС‚РІ (online)." << endl
+				<< "-->  9. Р¤РёР»СЊС‚СЂР°С†РёСЏ СѓСЃС‚СЂРѕР№СЃС‚РІ (РїРѕ РґР°С‚Рµ)." << endl
+				<< "--> 10. РЎРѕР·РґР°РЅРёРµ СЃС†РµРЅР°СЂРёСЏ." << endl
+				<< "--> 11. РЈРґР°Р»РµРЅРёРµ СЃС†РµРЅР°СЂРёСЏ." << endl
+				<< "--> 12. Р РµРґР°РєС‚РёСЂРѕРІР°РЅРёРµ СЃС†РµРЅР°СЂРёСЏ." << endl
+				<< "--> 13. РџРѕСЃРјРѕС‚СЂРµС‚СЊ РёРЅС„РѕСЂРјР°С†РёСЋ Рѕ РІСЃРµС… СЃС†РµРЅР°СЂРёСЏС…." << endl
+				<< "-->  0. Р’С‹С…РѕРґ..." << endl << ">> ";
 		}
 
 		/*void SmartHomeInteraction::generateUserReport()
@@ -2584,58 +2532,58 @@
 			ofstream report_file(report_filename, ios::out | ios::trunc);
 
 			if (!report_file.is_open())
-				throw runtime_error("Не удалось создать файл отчета: " + report_filename);
+				throw runtime_error("РќРµ СѓРґР°Р»РѕСЃСЊ СЃРѕР·РґР°С‚СЊ С„Р°Р№Р» РѕС‚С‡РµС‚Р°: " + report_filename);
 
 			report_file << "=============================================\n";
-			report_file << "          ОТЧЕТ УМНОГО ДОМА\n";
+			report_file << "          РћРўР§Р•Рў РЈРњРќРћР“Рћ Р”РћРњРђ\n";
 			report_file << "=============================================\n\n";
 
 
-			report_file << "ИНФОРМАЦИЯ О ПОЛЬЗОВАТЕЛЕ:\n";
+			report_file << "РРќР¤РћР РњРђР¦РРЇ Рћ РџРћР›Р¬Р—РћР’РђРўР•Р›Р•:\n";
 			report_file << "============================\n";
 			report_file << current_user << "\n";
 
-			report_file << "УСТРОЙСТВА (" << devices.size() << "):\n";
+			report_file << "РЈРЎРўР РћР™РЎРўР’Рђ (" << devices.size() << "):\n";
 			report_file << "============================\n";
 
 			if (device.empty())
 			{
-				report_file << "Нет подключенных устройств\n";
+				report_file << "РќРµС‚ РїРѕРґРєР»СЋС‡РµРЅРЅС‹С… СѓСЃС‚СЂРѕР№СЃС‚РІ\n";
 			}
 			else
 			{
 				int device_number = 1;
 				for (const auto& device : devices)
 				{
-					report_file << "\nУстройство #" << device_number++ << ":\n";
+					report_file << "\nРЈСЃС‚СЂРѕР№СЃС‚РІРѕ #" << device_number++ << ":\n";
 					report_file << device;
 					report_file << "----------------------------------------\n";
 				}
 			}
 
-			report_file << "\nАКТИВНЫЕ СЦЕНАРИИ:\n";
+			report_file << "\nРђРљРўРР’РќР«Р• РЎР¦Р•РќРђР РР:\n";
 			report_file << "============================\n";
 
 			auto scripts_copy = script_subsequence;
 			if (scripts_copy.empty())
 			{
-				report_file << "Нет активных сценариев\n";
+				report_file << "РќРµС‚ Р°РєС‚РёРІРЅС‹С… СЃС†РµРЅР°СЂРёРµРІ\n";
 			}
 			else
 			{
 				int script_number = 1;
 				while (!scripts_copy.empty())
 				{
-					report_file << "\nСценарий #" << script_number++ << ":\n";
+					report_file << "\nРЎС†РµРЅР°СЂРёР№ #" << script_number++ << ":\n";
 					report_file << scripts_copy.front();
 					report_file << "----------------------------------------\n";
 					scripts_copy.pop();
 				}
 			}
 
-			report_file << "\nСТАТИСТИКА:\n";
+			report_file << "\nРЎРўРђРўРРЎРўРРљРђ:\n";
 			report_file << "============================\n";
-			report_file << "Всего устройств: " << devices.size() << "\n";
+			report_file << "Р’СЃРµРіРѕ СѓСЃС‚СЂРѕР№СЃС‚РІ: " << devices.size() << "\n";
 
 
 			int lights_count = 0, thermos_count = 0, cameras_count = 0;
@@ -2669,25 +2617,25 @@
 				}
 			}
 
-			report_file << "  • Умных ламп: " << lights_count << "\n";
-			report_file << "  • Термостатов: " << thermos_count << "\n";
-			report_file << "  • Камер безопасности: " << cameras_count << "\n";
-			report_file << "Активных сценариев: " << script_subsequence.size() << "\n";
+			report_file << "  вЂў РЈРјРЅС‹С… Р»Р°РјРї: " << lights_count << "\n";
+			report_file << "  вЂў РўРµСЂРјРѕСЃС‚Р°С‚РѕРІ: " << thermos_count << "\n";
+			report_file << "  вЂў РљР°РјРµСЂ Р±РµР·РѕРїР°СЃРЅРѕСЃС‚Рё: " << cameras_count << "\n";
+			report_file << "РђРєС‚РёРІРЅС‹С… СЃС†РµРЅР°СЂРёРµРІ: " << script_subsequence.size() << "\n";
 
 			if (!devices.empty())
 			{
 				double online_percent = (online_count * 100.0) / devices.size();
-				report_file << "Устройств онлайн: " << online_count << " из " << devices.size()
+				report_file << "РЈСЃС‚СЂРѕР№СЃС‚РІ РѕРЅР»Р°Р№РЅ: " << online_count << " РёР· " << devices.size()
 					<< " (" << fixed << setprecision(1) << online_percent << "%)\n";
 			}
 			else
 			{
-				report_file << "Устройств онлайн: 0 из 0 (0.0%)\n";
+				report_file << "РЈСЃС‚СЂРѕР№СЃС‚РІ РѕРЅР»Р°Р№РЅ: 0 РёР· 0 (0.0%)\n";
 			}
 
 			time_t now = time(0);
 			tm* local_time = localtime(&now);
-			report_file << "\nОтчет сгенерирован: "
+			report_file << "\nРћС‚С‡РµС‚ СЃРіРµРЅРµСЂРёСЂРѕРІР°РЅ: "
 				<< (local_time->tm_year + 1900) << "-"
 				<< setw(2) << setfill('0') << (local_time->tm_mon + 1) << "-"
 				<< setw(2) << setfill('0') << local_time->tm_mday << " "
@@ -2698,7 +2646,7 @@
 			report_file << "=============================================\n";
 
 			report_file.close();
-			cout << "Отчет успешно сохранен в файл: " << report_filename << "\n";
+			cout << "РћС‚С‡РµС‚ СѓСЃРїРµС€РЅРѕ СЃРѕС…СЂР°РЅРµРЅ РІ С„Р°Р№Р»: " << report_filename << "\n";
 		}*/
 
 		void SmartHomeInteraction::generateFullReport()
@@ -2715,13 +2663,12 @@
 
 			ofstream report_file(report_filename, ios::out | ios::trunc);
 
-			report_file << "=============================================\n";
-			report_file << "          ОТЧЕТ УМНОГО ДОМА\n";
-			report_file << "=============================================\n\n";
+			report_file << string(40, '=') << "\n";
+			report_file << "РћРўР§Р•Рў РЈРњРќРћР“Рћ Р”РћРњРђ\n";
+			report_file << string(40, '=') << "\n";
 
-
-			report_file << "ИНФОРМАЦИЯ О ПОЛЬЗОВАТЕЛЕ:\n";
-			report_file << "============================\n";
+			report_file << "РРќР¤РћР РњРђР¦РРЇ Рћ РџРћР›Р¬Р—РћР’РђРўР•Р›Р•:\n";
+			report_file << string(40, '=') << "\n";
 
 			report_file << ss.str();
 
@@ -2731,35 +2678,36 @@
 
 			report_file.open(report_filename, ios::out | ios::app);
 
-			report_file << "\nАКТИВНЫЕ СЦЕНАРИИ:\n";
-			report_file << "============================\n";
+			report_file << string(40, '=') << "\n";
+			report_file << "РђРљРўРР’РќР«Р• РЎР¦Р•РќРђР РР:\n";
+			report_file << string(40, '=') << "\n";
 
 			auto scripts_copy = script_subsequence;
 			if (scripts_copy.empty())
 			{
-				report_file << "Нет активных сценариев\n";
+				report_file << "РќРµС‚ Р°РєС‚РёРІРЅС‹С… СЃС†РµРЅР°СЂРёРµРІ\n";
 			}
 			else
 			{
 				int script_number = 1;
 				while (!scripts_copy.empty())
 				{
-					report_file << "\nСценарий #" << script_number++ << ":\n";
+					report_file << "\nРЎС†РµРЅР°СЂРёР№ #" << script_number++ << ":\n";
 
 					stringstream script_ss;
 					script_ss << scripts_copy.front();
 					report_file << script_ss.str();
 
-					report_file << "----------------------------------------\n";
+					report_file << string(40, '-') << "\n";
 					scripts_copy.pop();
 				}
 
-				report_file << "Всего сценариев: " << script_subsequence.size() << "\n";
+				report_file << "Р’СЃРµРіРѕ СЃС†РµРЅР°СЂРёРµРІ: " << script_subsequence.size() << "\n";
 			}
 
 			time_t now = time(0);
 			tm* local_time = localtime(&now);
-			report_file << "\nОтчет сгенерирован: "
+			report_file << "\nРћС‚С‡РµС‚ СЃРіРµРЅРµСЂРёСЂРѕРІР°РЅ: "
 				<< (local_time->tm_year + 1900) << "-"
 				<< setw(2) << setfill('0') << (local_time->tm_mon + 1) << "-"
 				<< setw(2) << setfill('0') << local_time->tm_mday << " "
@@ -2767,10 +2715,10 @@
 				<< setw(2) << setfill('0') << local_time->tm_min << ":"
 				<< setw(2) << setfill('0') << local_time->tm_sec << "\n";
 
-			report_file << "=============================================\n";
+			report_file << string(40, '=') << "\n";
 
 			report_file.close();
-			cout << "Отчет создан: " << report_filename << "\n";
+			cout << "РћС‚С‡РµС‚ СЃРѕР·РґР°РЅ: " << report_filename << "\n";
 		}
 
 		void SmartHomeInteraction::showSmartHomeMenu()
@@ -2785,7 +2733,7 @@
 					if (cin.fail()) {
 						cin.clear();
 						cin.ignore((numeric_limits<streamsize>::max)(), '\n');
-						cout << "Ошибка ввода! Введите число: ";
+						cout << "РћС€РёР±РєР° РІРІРѕРґР°! Р’РІРµРґРёС‚Рµ С‡РёСЃР»Рѕ: ";
 					}
 					else {
 						cin.ignore((numeric_limits<streamsize>::max)(), '\n');
@@ -2803,7 +2751,7 @@
 				case 1:
 				{
 					if (admin_action) {
-						cout << "На аккаунте другого пользователя, вы можете только редактировать, удалять и создать отчет." << endl;
+						cout << "РќР° Р°РєРєР°СѓРЅС‚Рµ РґСЂСѓРіРѕРіРѕ РїРѕР»СЊР·РѕРІР°С‚РµР»СЏ, РІС‹ РјРѕР¶РµС‚Рµ С‚РѕР»СЊРєРѕ СЂРµРґР°РєС‚РёСЂРѕРІР°С‚СЊ, СѓРґР°Р»СЏС‚СЊ Рё СЃРѕР·РґР°С‚СЊ РѕС‚С‡РµС‚." << endl;
 						break;
 					}
 					auto device = chooseDevice();
@@ -2814,7 +2762,7 @@
 						dev.setPassword(user_password);
 						}, device);
 					if (device_file.checkDevice(device))
-						cout << "Данное устройство уже существует на вашем аккаунте." << endl;
+						cout << "Р”Р°РЅРЅРѕРµ СѓСЃС‚СЂРѕР№СЃС‚РІРѕ СѓР¶Рµ СЃСѓС‰РµСЃС‚РІСѓРµС‚ РЅР° РІР°С€РµРј Р°РєРєР°СѓРЅС‚Рµ." << endl;
 					else
 						device_file.writeF(device);
 					break;
@@ -2824,10 +2772,10 @@
 
 					int count = device_file.readF();
 					if (!count) {
-						cout << "У вас нет устройств для редактирования\n";
+						cout << "РЈ РІР°СЃ РЅРµС‚ СѓСЃС‚СЂРѕР№СЃС‚РІ РґР»СЏ СЂРµРґР°РєС‚РёСЂРѕРІР°РЅРёСЏ\n";
 						break;
 					}
-					cout << "Выбор устройства для редактирования (1-" << count << ")." << endl;
+					cout << "Р’С‹Р±РѕСЂ СѓСЃС‚СЂРѕР№СЃС‚РІР° РґР»СЏ СЂРµРґР°РєС‚РёСЂРѕРІР°РЅРёСЏ (1-" << count << ")." << endl;
 					auto old_device = device_file.chooseCertainDevice(count);
 
 					SmartType device_type = std::visit([](auto&& dev) -> SmartType {
@@ -2835,7 +2783,7 @@
 						}, old_device);
 
 					auto new_device = chooseDevice(device_type);
-					cout << "Введите новые данные для устройства:\n";
+					cout << "Р’РІРµРґРёС‚Рµ РЅРѕРІС‹Рµ РґР°РЅРЅС‹Рµ РґР»СЏ СѓСЃС‚СЂРѕР№СЃС‚РІР°:\n";
 					cin >> new_device;
 
 					string user_password = current_user->getPassword();
@@ -2844,7 +2792,7 @@
 						}, new_device);
 					if (device_file.checkDevice(new_device))
 					{
-						cout << "Данное устройство уже существует на вашем аккаунте." << endl;
+						cout << "Р”Р°РЅРЅРѕРµ СѓСЃС‚СЂРѕР№СЃС‚РІРѕ СѓР¶Рµ СЃСѓС‰РµСЃС‚РІСѓРµС‚ РЅР° РІР°С€РµРј Р°РєРєР°СѓРЅС‚Рµ." << endl;
 						break;
 					}
 					device_file.editF(old_device, new_device);
@@ -2882,7 +2830,7 @@
 						script_subsequence = updated_queue;
 
 						if (scripts_updated)
-							cout << "Сценарии обновлены с новым устройством.\n";
+							cout << "РЎС†РµРЅР°СЂРёРё РѕР±РЅРѕРІР»РµРЅС‹ СЃ РЅРѕРІС‹Рј СѓСЃС‚СЂРѕР№СЃС‚РІРѕРј.\n";
 						
 					}
 
@@ -2899,7 +2847,7 @@
 						if (cin.fail() || choice < 1 || choice > count) {
 							cin.clear();
 							cin.ignore((numeric_limits<streamsize>::max)(), '\n');
-							cout << "Ошибка ввода! Введите число от 1 до " << count << ": ";
+							cout << "РћС€РёР±РєР° РІРІРѕРґР°! Р’РІРµРґРёС‚Рµ С‡РёСЃР»Рѕ РѕС‚ 1 РґРѕ " << count << ": ";
 						}
 						else {
 							cin.ignore((numeric_limits<streamsize>::max)(), '\n');
@@ -2919,7 +2867,7 @@
 				case 5:
 				{
 					if (admin_action) {
-						cout << "На аккаунте другого пользователя, вы можете только редактировать, удалять и создать отчет." << endl;
+						cout << "РќР° Р°РєРєР°СѓРЅС‚Рµ РґСЂСѓРіРѕРіРѕ РїРѕР»СЊР·РѕРІР°С‚РµР»СЏ, РІС‹ РјРѕР¶РµС‚Рµ С‚РѕР»СЊРєРѕ СЂРµРґР°РєС‚РёСЂРѕРІР°С‚СЊ, СѓРґР°Р»СЏС‚СЊ Рё СЃРѕР·РґР°С‚СЊ РѕС‚С‡РµС‚." << endl;
 						break;
 					}
 					device_file.sortF([](const DeviceVariant& a, const DeviceVariant& b) -> bool {
@@ -2936,11 +2884,11 @@
 				case 6:
 				{
 					if (admin_action) {
-						cout << "На аккаунте другого пользователя, вы можете только редактировать, удалять и создать отчет." << endl;
+						cout << "РќР° Р°РєРєР°СѓРЅС‚Рµ РґСЂСѓРіРѕРіРѕ РїРѕР»СЊР·РѕРІР°С‚РµР»СЏ, РІС‹ РјРѕР¶РµС‚Рµ С‚РѕР»СЊРєРѕ СЂРµРґР°РєС‚РёСЂРѕРІР°С‚СЊ, СѓРґР°Р»СЏС‚СЊ Рё СЃРѕР·РґР°С‚СЊ РѕС‚С‡РµС‚." << endl;
 						break;
 					}
 					string target_dev_name;
-					cout << "Введите название устройства: ";
+					cout << "Р’РІРµРґРёС‚Рµ РЅР°Р·РІР°РЅРёРµ СѓСЃС‚СЂРѕР№СЃС‚РІР°: ";
 					getline(cin, target_dev_name);
 					device_file.searchF(target_dev_name);
 					break;
@@ -2953,18 +2901,18 @@
 				case 8:
 				{
 					if (admin_action) {
-						cout << "На аккаунте другого пользователя, вы можете только редактировать, удалять и создать отчет." << endl;
+						cout << "РќР° Р°РєРєР°СѓРЅС‚Рµ РґСЂСѓРіРѕРіРѕ РїРѕР»СЊР·РѕРІР°С‚РµР»СЏ, РІС‹ РјРѕР¶РµС‚Рµ С‚РѕР»СЊРєРѕ СЂРµРґР°РєС‚РёСЂРѕРІР°С‚СЊ, СѓРґР°Р»СЏС‚СЊ Рё СЃРѕР·РґР°С‚СЊ РѕС‚С‡РµС‚." << endl;
 						break;
 					}
 					bool isOnline;
-					cout << "Устройство онлайн? (0-Нет, 1-Да): ";
+					cout << "РЈСЃС‚СЂРѕР№СЃС‚РІРѕ РѕРЅР»Р°Р№РЅ? (0-РќРµС‚, 1-Р”Р°): ";
 					
 					while (true) {
 						cin >> isOnline;
 						if (cin.fail()) {
 							cin.clear();
 							cin.ignore((numeric_limits<streamsize>::max)(), '\n');
-							cout << "Ошибка ввода! Введите 0 или 1: ";
+							cout << "РћС€РёР±РєР° РІРІРѕРґР°! Р’РІРµРґРёС‚Рµ 0 РёР»Рё 1: ";
 						}
 						else {
 							cin.ignore((numeric_limits<streamsize>::max)(), '\n');
@@ -2978,24 +2926,24 @@
 								}, device);
 							return isOnline == device_online;
 						},
-						"Статус: " + std::string(isOnline ? "онлайн" : "офлайн")
+						"РЎС‚Р°С‚СѓСЃ: " + std::string(isOnline ? "РѕРЅР»Р°Р№РЅ" : "РѕС„Р»Р°Р№РЅ")
 					);
 					break;
 				}
 				case 9:
 				{
 					if (admin_action) {
-						cout << "На аккаунте другого пользователя, вы можете только редактировать, удалять и создать отчет." << endl;
+						cout << "РќР° Р°РєРєР°СѓРЅС‚Рµ РґСЂСѓРіРѕРіРѕ РїРѕР»СЊР·РѕРІР°С‚РµР»СЏ, РІС‹ РјРѕР¶РµС‚Рµ С‚РѕР»СЊРєРѕ СЂРµРґР°РєС‚РёСЂРѕРІР°С‚СЊ, СѓРґР°Р»СЏС‚СЊ Рё СЃРѕР·РґР°С‚СЊ РѕС‚С‡РµС‚." << endl;
 						break;
 					}
 					Date first_date, second_date;
-					cout << "Введите первую дату:" << endl;
+					cout << "Р’РІРµРґРёС‚Рµ РїРµСЂРІСѓСЋ РґР°С‚Сѓ:" << endl;
 					cin >> first_date;
-					cout << "Введите вторую дату:" << endl;
+					cout << "Р’РІРµРґРёС‚Рµ РІС‚РѕСЂСѓСЋ РґР°С‚Сѓ:" << endl;
 					cin >> second_date;
 					if (second_date < first_date || second_date == first_date)
 					{
-						cout << "Вторая дата не может быть раньше или равна первой." << endl;
+						cout << "Р’С‚РѕСЂР°СЏ РґР°С‚Р° РЅРµ РјРѕР¶РµС‚ Р±С‹С‚СЊ СЂР°РЅСЊС€Рµ РёР»Рё СЂР°РІРЅР° РїРµСЂРІРѕР№." << endl;
 						break;
 					}
 					device_file.filter(
@@ -3005,10 +2953,10 @@
 								}, device);
 							return !(purchase_date < first_date) && !(second_date < purchase_date);
 						},
-						"Период с " +
+						"РџРµСЂРёРѕРґ СЃ " +
 						std::to_string(first_date.getYear()) + "-" +
 						std::to_string(first_date.getMonth()) + "-" +
-						std::to_string(first_date.getDay()) + " по " +
+						std::to_string(first_date.getDay()) + " РїРѕ " +
 						std::to_string(second_date.getYear()) + "-" +
 						std::to_string(second_date.getMonth()) + "-" +
 						std::to_string(second_date.getDay())
@@ -3018,29 +2966,29 @@
 				case 10:
 				{
 					if (admin_action) {
-						cout << "На аккаунте другого пользователя, вы можете только редактировать, удалять и создать отчет." << endl;
+						cout << "РќР° Р°РєРєР°СѓРЅС‚Рµ РґСЂСѓРіРѕРіРѕ РїРѕР»СЊР·РѕРІР°С‚РµР»СЏ, РІС‹ РјРѕР¶РµС‚Рµ С‚РѕР»СЊРєРѕ СЂРµРґР°РєС‚РёСЂРѕРІР°С‚СЊ, СѓРґР°Р»СЏС‚СЊ Рё СЃРѕР·РґР°С‚СЊ РѕС‚С‡РµС‚." << endl;
 						break;
 					}
 					int count = device_file.readF();
 					if (!count)
-						cout << "К сожалению вы не можете добавить сценарий." << std::endl;
+						cout << "Рљ СЃРѕР¶Р°Р»РµРЅРёСЋ РІС‹ РЅРµ РјРѕР¶РµС‚Рµ РґРѕР±Р°РІРёС‚СЊ СЃС†РµРЅР°СЂРёР№." << std::endl;
 					else
 					{
 						auto device_variant = device_file.chooseCertainDevice(count);
 
-						cout << "Введите описание сценария: ";
+						cout << "Р’РІРµРґРёС‚Рµ РѕРїРёСЃР°РЅРёРµ СЃС†РµРЅР°СЂРёСЏ: ";
 						string script_desc;
 						getline(cin, script_desc);
 
 
-						cout << "Введите длительность сценария (в минутах): ";
+						cout << "Р’РІРµРґРёС‚Рµ РґР»РёС‚РµР»СЊРЅРѕСЃС‚СЊ СЃС†РµРЅР°СЂРёСЏ (РІ РјРёРЅСѓС‚Р°С…): ";
 						short duration;
 						while (true) {
 							cin >> duration;
 							if (cin.fail() || duration < 0) {
 								cin.clear();
 								cin.ignore((numeric_limits<streamsize>::max)(), '\n');
-								cout << "Ошибка ввода! Введите число: ";
+								cout << "РћС€РёР±РєР° РІРІРѕРґР°! Р’РІРµРґРёС‚Рµ С‡РёСЃР»Рѕ: ";
 							}
 							else {
 								cin.ignore((numeric_limits<streamsize>::max)(), '\n');
@@ -3054,14 +3002,14 @@
 
 
 						SmartHomeInteraction::script_subsequence.push(dev_script);
-						cout << "Сценарий успешно добавлен!\n";
+						cout << "РЎС†РµРЅР°СЂРёР№ СѓСЃРїРµС€РЅРѕ РґРѕР±Р°РІР»РµРЅ!\n";
 					}
 
 					break;
 				}
 				case 11:
 				{
-					if (script_subsequence.empty()) cout << "На вашем аккаунте нет сценариев." << endl;
+					if (script_subsequence.empty()) cout << "РќР° РІР°С€РµРј Р°РєРєР°СѓРЅС‚Рµ РЅРµС‚ СЃС†РµРЅР°СЂРёРµРІ." << endl;
 					else 
 					{
 						int count = device_file.readF();
@@ -3082,7 +3030,7 @@
 				}
 				default:
 				{
-					cout << "Вы ввели неверный выбор. Попробуйте еще раз." << endl;
+					cout << "Р’С‹ РІРІРµР»Рё РЅРµРІРµСЂРЅС‹Р№ РІС‹Р±РѕСЂ. РџРѕРїСЂРѕР±СѓР№С‚Рµ РµС‰Рµ СЂР°Р·." << endl;
 					break;
 				}
 				}
@@ -3095,17 +3043,17 @@
 			int choice;
 			while (is_running)
 			{
-				cout << "Меню учетной записи:" << endl
-					<< "--> 1.Информация об аккаунте." << endl
-					<< "--> 2.Удалить учетную запись." << endl
-					<< "--> 0.Выход..." << endl << ">> ";
+				cout << "РњРµРЅСЋ СѓС‡РµС‚РЅРѕР№ Р·Р°РїРёСЃРё:" << endl
+					<< "--> 1.РРЅС„РѕСЂРјР°С†РёСЏ РѕР± Р°РєРєР°СѓРЅС‚Рµ." << endl
+					<< "--> 2.РЈРґР°Р»РёС‚СЊ СѓС‡РµС‚РЅСѓСЋ Р·Р°РїРёСЃСЊ." << endl
+					<< "--> 0.Р’С‹С…РѕРґ..." << endl << ">> ";
 
 				while (is_running) {
 					cin >> choice;
 					if (cin.fail()) {
 						cin.clear();
 						cin.ignore((numeric_limits<streamsize>::max)(), '\n');
-						cout << "Ошибка ввода! Введите число: ";
+						cout << "РћС€РёР±РєР° РІРІРѕРґР°! Р’РІРµРґРёС‚Рµ С‡РёСЃР»Рѕ: ";
 					}
 					else {
 						cin.ignore((numeric_limits<streamsize>::max)(), '\n');
@@ -3117,13 +3065,13 @@
 				{
 					cout << *current_user << endl;
 					string temp_password;
-					cout << "Для просмотра пароля, введите пароль: ";
+					cout << "Р”Р»СЏ РїСЂРѕСЃРјРѕС‚СЂР° РїР°СЂРѕР»СЏ, РІРІРµРґРёС‚Рµ РїР°СЂРѕР»СЊ: ";
 					getline(cin, temp_password);
 					string hashed_temp_password = hashPassword(current_user->getUserName(),temp_password);
 					if (hashed_temp_password == current_user->getPassword())
-						cout << "Пароль: " << temp_password << endl;
+						cout << "РџР°СЂРѕР»СЊ: " << temp_password << endl;
 					else
-						cout << "Пароль не совпадает." << endl;
+						cout << "РџР°СЂРѕР»СЊ РЅРµ СЃРѕРІРїР°РґР°РµС‚." << endl;
 					break;
 				}
 				case 2:
@@ -3131,23 +3079,23 @@
 					if (!admin_action)
 					{
 						string temp_password;
-						cout << "Для удаления учетной записи, введите пароль: ";
+						cout << "Р”Р»СЏ СѓРґР°Р»РµРЅРёСЏ СѓС‡РµС‚РЅРѕР№ Р·Р°РїРёСЃРё, РІРІРµРґРёС‚Рµ РїР°СЂРѕР»СЊ: ";
 						getline(cin, temp_password);
 						string hashed_temp_password = hashPassword(current_user->getUserName(), temp_password);
 						if (hashed_temp_password != current_user->getPassword())
 						{
-							cout << "Пароль учетной записи и введенный пароли не совпадают." << endl;
+							cout << "РџР°СЂРѕР»СЊ СѓС‡РµС‚РЅРѕР№ Р·Р°РїРёСЃРё Рё РІРІРµРґРµРЅРЅС‹Р№ РїР°СЂРѕР»Рё РЅРµ СЃРѕРІРїР°РґР°СЋС‚." << endl;
 							break;
 
 						}
 					}
 						if (std::filesystem::remove(device_file.getFileName()))
 						{
-							std::cout << "Файл " << device_file.getFileName() << " успешно удален\n";
+							std::cout << "Р¤Р°Р№Р» " << device_file.getFileName() << " СѓСЃРїРµС€РЅРѕ СѓРґР°Р»РµРЅ\n";
 						}
 						else
 						{
-							std::cout << "Файл " << device_file.getFileName() << " не найден или не может быть удален\n";
+							std::cout << "Р¤Р°Р№Р» " << device_file.getFileName() << " РЅРµ РЅР°Р№РґРµРЅ РёР»Рё РЅРµ РјРѕР¶РµС‚ Р±С‹С‚СЊ СѓРґР°Р»РµРЅ\n";
 						}
 
 						user_file.removeF(*current_user);
@@ -3162,7 +3110,7 @@
 				}
 				default:
 				{
-					cout << "Неверное значение выбора, попробуйте ещё раз." << endl;
+					cout << "РќРµРІРµСЂРЅРѕРµ Р·РЅР°С‡РµРЅРёРµ РІС‹Р±РѕСЂР°, РїРѕРїСЂРѕР±СѓР№С‚Рµ РµС‰С‘ СЂР°Р·." << endl;
 					break;
 				}
 				}
@@ -3177,17 +3125,17 @@
 			int choice;
 			while (is_running)
 			{
-				cout << "Меню учетной записи:" << endl
-					<< "--> 1.Информация всех зарегистрированных аккаунтов." << endl
-					<< "--> 2.Войти в качестве User." << endl
-					<< "--> 0.Выход..." << endl << ">> ";
+				cout << "РњРµРЅСЋ СѓС‡РµС‚РЅРѕР№ Р·Р°РїРёСЃРё:" << endl
+					<< "--> 1.РРЅС„РѕСЂРјР°С†РёСЏ РІСЃРµС… Р·Р°СЂРµРіРёСЃС‚СЂРёСЂРѕРІР°РЅРЅС‹С… Р°РєРєР°СѓРЅС‚РѕРІ." << endl
+					<< "--> 2.Р’РѕР№С‚Рё РІ РєР°С‡РµСЃС‚РІРµ User." << endl
+					<< "--> 0.Р’С‹С…РѕРґ..." << endl << ">> ";
 
 				while (is_running) {
 					cin >> choice;
 					if (cin.fail()) {
 						cin.clear();
 						cin.ignore((numeric_limits<streamsize>::max)(), '\n');
-						cout << "Ошибка ввода! Введите число: ";
+						cout << "РћС€РёР±РєР° РІРІРѕРґР°! Р’РІРµРґРёС‚Рµ С‡РёСЃР»Рѕ: ";
 					}
 					else {
 						cin.ignore((numeric_limits<streamsize>::max)(), '\n');
@@ -3203,7 +3151,7 @@
 				case 2:
 				{
 					string name;
-					cout << "Введите имя аккаунта: ";
+					cout << "Р’РІРµРґРёС‚Рµ РёРјСЏ Р°РєРєР°СѓРЅС‚Р°: ";
 					getline(cin, name);
 					User temp_user = user_file.chooseUser_a(name);
 					if (temp_user == User()) break;
@@ -3220,7 +3168,7 @@
 				}
 				default:
 				{
-					cout << "Неверное значение выбора, попробуйте ещё раз." << endl;
+					cout << "РќРµРІРµСЂРЅРѕРµ Р·РЅР°С‡РµРЅРёРµ РІС‹Р±РѕСЂР°, РїРѕРїСЂРѕР±СѓР№С‚Рµ РµС‰С‘ СЂР°Р·." << endl;
 					break;
 				}
 				}
@@ -3233,16 +3181,16 @@
 
 			if (user_file.checkUser(*current_user) == 1)
 			{
-				cout << "Данная учетная запись уже существует, вход совершается автоматически." << endl;
+				cout << "Р”Р°РЅРЅР°СЏ СѓС‡РµС‚РЅР°СЏ Р·Р°РїРёСЃСЊ СѓР¶Рµ СЃСѓС‰РµСЃС‚РІСѓРµС‚, РІС…РѕРґ СЃРѕРІРµСЂС€Р°РµС‚СЃСЏ Р°РІС‚РѕРјР°С‚РёС‡РµСЃРєРё." << endl;
 			}
 			else if (user_file.checkUser(*current_user) == 0)
 			{
 				user_file.writeF(*current_user);
-				cout << "Пользователь зарегистрирован. Добро пожаловать в систему Smart Home!" << endl;
+				cout << "РџРѕР»СЊР·РѕРІР°С‚РµР»СЊ Р·Р°СЂРµРіРёСЃС‚СЂРёСЂРѕРІР°РЅ. Р”РѕР±СЂРѕ РїРѕР¶Р°Р»РѕРІР°С‚СЊ РІ СЃРёСЃС‚РµРјСѓ Smart Home!" << endl;
 			}
 			else 
 			{
-				cout << "Пользователь уже существует с таким же именем." << std::endl;
+				cout << "РџРѕР»СЊР·РѕРІР°С‚РµР»СЊ СѓР¶Рµ СЃСѓС‰РµСЃС‚РІСѓРµС‚ СЃ С‚Р°РєРёРј Р¶Рµ РёРјРµРЅРµРј." << std::endl;
 				return;
 			}
 			
@@ -3254,17 +3202,17 @@
 				while (is_running)
 				{
 					*current_user = admin;
-					cout << "Дальнейшие действия:" << endl
-						<< "1.Админские операции." << endl
-						<< "2.Главное меню." << endl
-						<< "0.Выход." << endl
-						<< "Выберите соответсвующее действие: ";
+					cout << "Р”Р°Р»СЊРЅРµР№С€РёРµ РґРµР№СЃС‚РІРёСЏ:" << endl
+						<< "1.РђРґРјРёРЅСЃРєРёРµ РѕРїРµСЂР°С†РёРё." << endl
+						<< "2.Р“Р»Р°РІРЅРѕРµ РјРµРЅСЋ." << endl
+						<< "0.Р’С‹С…РѕРґ." << endl
+						<< "Р’С‹Р±РµСЂРёС‚Рµ СЃРѕРѕС‚РІРµС‚СЃРІСѓСЋС‰РµРµ РґРµР№СЃС‚РІРёРµ: ";
 					while (true) {
 						cin >> choice;
 						if (cin.fail()) {
 							cin.clear();
 							cin.ignore((numeric_limits<streamsize>::max)(), '\n');
-							cout << "Ошибка ввода! Введите число: ";
+							cout << "РћС€РёР±РєР° РІРІРѕРґР°! Р’РІРµРґРёС‚Рµ С‡РёСЃР»Рѕ: ";
 						}
 						else {
 							cin.ignore((numeric_limits<streamsize>::max)(), '\n');
@@ -3299,11 +3247,11 @@
 		{
 
 				if (user_file.checkUser(*current_user) == 1) {
-					cout << "Вход выполнен успешно! Добро пожаловать!" << endl;
+					cout << "Р’С…РѕРґ РІС‹РїРѕР»РЅРµРЅ СѓСЃРїРµС€РЅРѕ! Р”РѕР±СЂРѕ РїРѕР¶Р°Р»РѕРІР°С‚СЊ!" << endl;
 				}
 				else if(user_file.checkUser(*current_user) == 0)
 				{
-					cout << "Пользователь не найден. Проверьте логин и пароль." << endl;
+					cout << "РџРѕР»СЊР·РѕРІР°С‚РµР»СЊ РЅРµ РЅР°Р№РґРµРЅ. РџСЂРѕРІРµСЂСЊС‚Рµ Р»РѕРіРёРЅ Рё РїР°СЂРѕР»СЊ." << endl;
 					return;
 				}
 
@@ -3315,17 +3263,17 @@
 					while (is_running)
 					{
 						*current_user = admin;
-						cout << "Дальнейшие действия:" << endl
-							<< "1.Админские операции." << endl
-							<< "2.Главное меню." << endl
-							<< "0.Выход." << endl
-							<< "Выберите соответсвующее действие: ";
+						cout << "Р”Р°Р»СЊРЅРµР№С€РёРµ РґРµР№СЃС‚РІРёСЏ:" << endl
+							<< "1.РђРґРјРёРЅСЃРєРёРµ РѕРїРµСЂР°С†РёРё." << endl
+							<< "2.Р“Р»Р°РІРЅРѕРµ РјРµРЅСЋ." << endl
+							<< "0.Р’С‹С…РѕРґ." << endl
+							<< "Р’С‹Р±РµСЂРёС‚Рµ СЃРѕРѕС‚РІРµС‚СЃРІСѓСЋС‰РµРµ РґРµР№СЃС‚РІРёРµ: ";
 						while (true) {
 							cin >> choice;
 							if (cin.fail()) {
 								cin.clear();
 								cin.ignore((numeric_limits<streamsize>::max)(), '\n');
-								cout << "Ошибка ввода! Введите число: ";
+								cout << "РћС€РёР±РєР° РІРІРѕРґР°! Р’РІРµРґРёС‚Рµ С‡РёСЃР»Рѕ: ";
 							}
 							else {
 								cin.ignore((numeric_limits<streamsize>::max)(), '\n');
@@ -3358,12 +3306,12 @@
 
 		void SmartHomeInteraction::showRoleHeaderMenu()
 		{
-			cout << "Меню выбора роли:" << endl
+			cout << "РњРµРЅСЋ РІС‹Р±РѕСЂР° СЂРѕР»Рё:" << endl
 				<< "--> 1.User." << endl
 				<< "--> 2.Admin." << endl
 				<< "--> 3.Guest." << endl
-				<< "--> 0.Выход..." << endl
-				<< "Выберите соответствующую роль" << std::endl << ">>";
+				<< "--> 0.Р’С‹С…РѕРґ..." << endl
+				<< "Р’С‹Р±РµСЂРёС‚Рµ СЃРѕРѕС‚РІРµС‚СЃС‚РІСѓСЋС‰СѓСЋ СЂРѕР»СЊ" << std::endl << ">> ";
 		}
 
 		void SmartHomeInteraction::showUserMenu()
@@ -3375,7 +3323,7 @@
 		{
 			 std::ifstream file("for_admins.txt", std::ios::in);
 			if (!file.is_open()) {
-				std::cout << "Ошибка открытия файла с паролем";
+				std::cout << "РћС€РёР±РєР° РѕС‚РєСЂС‹С‚РёСЏ С„Р°Р№Р»Р° СЃ РїР°СЂРѕР»РµРј";
 				return;
 			}  
 			//std::string admin_password;
@@ -3384,15 +3332,15 @@
 			std::getline(file, admin_password);
 			std::string current_password;
 			while (true) {
-				cout << "Введите админский пароль: " << std::endl << ">>";
+				cout << "Р’РІРµРґРёС‚Рµ Р°РґРјРёРЅСЃРєРёР№ РїР°СЂРѕР»СЊ: " << std::endl << ">>";
 				cin >> current_password;
 				if (admin_password == current_password) {
-					std::cout << "Пароль подтверждён. Продолжаем.\n";
+					std::cout << "РџР°СЂРѕР»СЊ РїРѕРґС‚РІРµСЂР¶РґС‘РЅ. РџСЂРѕРґРѕР»Р¶Р°РµРј.\n";
 					break;
 				}
 				else 
 				{
-					cout << "Вы ввели неверный пароль..." << std::endl;
+					cout << "Р’С‹ РІРІРµР»Рё РЅРµРІРµСЂРЅС‹Р№ РїР°СЂРѕР»СЊ..." << std::endl;
 					return;
 				}
 			}
@@ -3406,16 +3354,16 @@
 			short choice;
 			while (is_running)
 			{
-				cout << "Гостевое Меню" << endl
-					<< "1. Регистрация" << endl
-					<< "2. Просмотр перечня смарт-устройств" << endl
-					<< "0. Выход..." << endl << ">>";
+				cout << "Р“РѕСЃС‚РµРІРѕРµ РњРµРЅСЋ" << endl
+					<< "1. Р РµРіРёСЃС‚СЂР°С†РёСЏ" << endl
+					<< "2. РџСЂРѕСЃРјРѕС‚СЂ РїРµСЂРµС‡РЅСЏ СЃРјР°СЂС‚-СѓСЃС‚СЂРѕР№СЃС‚РІ" << endl
+					<< "0. Р’С‹С…РѕРґ..." << endl << ">>";
 				while (is_running) {
 					cin >> choice;
 					if (cin.fail()) {
 						cin.clear();
 						cin.ignore((numeric_limits<streamsize>::max)(), '\n');
-						cout << "Ошибка ввода! Введите число: ";
+						cout << "РћС€РёР±РєР° РІРІРѕРґР°! Р’РІРµРґРёС‚Рµ С‡РёСЃР»Рѕ: ";
 					}
 					else {
 						cin.ignore((numeric_limits<streamsize>::max)(), '\n');
@@ -3445,7 +3393,7 @@
 				
 				default:
 				{
-					cout << "Был введен неверный выбор. Попробуйте снова." << std::endl;
+					cout << "Р‘С‹Р» РІРІРµРґРµРЅ РЅРµРІРµСЂРЅС‹Р№ РІС‹Р±РѕСЂ. РџРѕРїСЂРѕР±СѓР№С‚Рµ СЃРЅРѕРІР°." << std::endl;
 					break;
 				}
 				}
@@ -3458,19 +3406,20 @@
 			short choice;
 			device_file.setFileName(current_user->getUserName());
 			script_subsequence = script_file.unloadScripts(*current_user);
+			cout << "\n";
 			while (is_running)
 			{
 
-				cout << "Главное меню:" << endl
-					<< "--> 1.Умный дом." << endl
-					<< "--> 2.Учётная запись." << endl
-					<< "--> 0.Выход..." << endl << ">> ";
+				cout << "Р“Р»Р°РІРЅРѕРµ РјРµРЅСЋ:" << endl
+					<< "--> 1.РЈРјРЅС‹Р№ РґРѕРј." << endl
+					<< "--> 2.РЈС‡С‘С‚РЅР°СЏ Р·Р°РїРёСЃСЊ." << endl
+					<< "--> 0.Р’С‹С…РѕРґ..." << endl << ">> ";
 				while (is_running) {
 					cin >> choice;
 					if (cin.fail()) {
 						cin.clear();
 						cin.ignore((numeric_limits<streamsize>::max)(), '\n');
-						cout << "Ошибка ввода! Введите число: ";
+						cout << "РћС€РёР±РєР° РІРІРѕРґР°! Р’РІРµРґРёС‚Рµ С‡РёСЃР»Рѕ: ";
 					}
 					else {
 						cin.ignore((numeric_limits<streamsize>::max)(), '\n');
@@ -3481,7 +3430,7 @@
 				{
 				case 0:
 				{
-					cout << "Автоматическая запись последовательности девайсов в файл." << endl;
+					cout << "РђРІС‚РѕРјР°С‚РёС‡РµСЃРєР°СЏ Р·Р°РїРёСЃСЊ РїРѕСЃР»РµРґРѕРІР°С‚РµР»СЊРЅРѕСЃС‚Рё РґРµРІР°Р№СЃРѕРІ РІ С„Р°Р№Р»." << endl;
 					script_file.writeF(script_subsequence);
 					is_running = false;
 					cout << "\n\n";
@@ -3500,7 +3449,7 @@
 				}
 				default:
 				{
-					cout << "Вы ввели неверный выбор." << endl;
+					cout << "Р’С‹ РІРІРµР»Рё РЅРµРІРµСЂРЅС‹Р№ РІС‹Р±РѕСЂ." << endl;
 					break;
 				}
 				}
@@ -3515,17 +3464,17 @@
 			UserRole temp_role = current_user->getRole();
 			while (is_running)
 			{
-				cout << "Меню учетной записи:" << endl
-					<< "--> 1. Создать учётную запись." << endl
-					<< ((current_user->getRole() != Guest_) ? "--> 2. Войти в учётную запись.\n" : "")
-					<< "--> 0.Выход..." << endl << ">>";
+				cout << "РњРµРЅСЋ СѓС‡РµС‚РЅРѕР№ Р·Р°РїРёСЃРё:" << endl
+					<< "--> 1. РЎРѕР·РґР°С‚СЊ СѓС‡С‘С‚РЅСѓСЋ Р·Р°РїРёСЃСЊ." << endl
+					<< ((current_user->getRole() != Guest_) ? "--> 2. Р’РѕР№С‚Рё РІ СѓС‡С‘С‚РЅСѓСЋ Р·Р°РїРёСЃСЊ.\n" : "")
+					<< "--> 0.Р’С‹С…РѕРґ..." << endl << ">> ";
 
 				while (true) {
 					cin >> choice;
 					if (cin.fail()) {
 						cin.clear();
 						cin.ignore((numeric_limits<streamsize>::max)(), '\n');
-						cout << "Ошибка ввода! Введите число: ";
+						cout << "РћС€РёР±РєР° РІРІРѕРґР°! Р’РІРµРґРёС‚Рµ С‡РёСЃР»Рѕ: ";
 					}
 					else {
 						cin.ignore((numeric_limits<streamsize>::max)(), '\n');
@@ -3561,7 +3510,7 @@
 					else {
 						string attempt_name;
 						string attempt_password;
-						cout << "Введите имя пользователя:";
+						cout << "Р’РІРµРґРёС‚Рµ РёРјСЏ РїРѕР»СЊР·РѕРІР°С‚РµР»СЏ: ";
 						getline(cin, attempt_name);
 
 						attempt_password = getPasswordWithDots();
@@ -3579,7 +3528,7 @@
 				}
 				default:
 				{
-					cout << "Вы ввели неверный выбор." << endl;
+					cout << "Р’С‹ РІРІРµР»Рё РЅРµРІРµСЂРЅС‹Р№ РІС‹Р±РѕСЂ." << endl;
 					break;
 				}
 				}
@@ -3588,7 +3537,7 @@
 
 		void SmartHomeInteraction::showDeviceCatalogHeaderMenu()
 		{
-			cout << "Каталог смарт устройств" << endl
+			cout << "РљР°С‚Р°Р»РѕРі СЃРјР°СЂС‚ СѓСЃС‚СЂРѕР№СЃС‚РІ" << endl
 				<< "0. Smart Light" << endl
 				<< "1. Thermostat" << endl
 				<< "2. Security Camera" << endl;
@@ -3607,7 +3556,7 @@
 					if (cin.fail()) {
 						cin.clear();
 						cin.ignore((numeric_limits<streamsize>::max)(), '\n');
-						cout << "Ошибка ввода! Введите число: ";
+						cout << "РћС€РёР±РєР° РІРІРѕРґР°! Р’РІРµРґРёС‚Рµ С‡РёСЃР»Рѕ: ";
 					}
 					else {
 						cin.ignore((numeric_limits<streamsize>::max)(), '\n');
@@ -3650,7 +3599,7 @@
 				}
 				default:
 				{
-					cout << "Вы выбрали несуществующий пункт меню." << endl;
+					cout << "Р’С‹ РІС‹Р±СЂР°Р»Рё РЅРµСЃСѓС‰РµСЃС‚РІСѓСЋС‰РёР№ РїСѓРЅРєС‚ РјРµРЅСЋ." << endl;
 					break;
 				}
 				}

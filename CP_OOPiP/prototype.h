@@ -189,7 +189,7 @@ namespace smart_system
 		friend istream& operator>>(istream& in, SecurityCamera& camera);
 		friend bool operator==(const SecurityCamera& lhs, const SecurityCamera& rhs);
 	public:
-		SecurityCamera(const string& owner_password, const string& title, const bool online, const Date& purchase_date, const int resolution, const bool recording, const bool motionDetectionEnabled); // в реализации
+		SecurityCamera(const string& owner_password, const string& title, const bool online, const Date& purchase_date, const int resolution, const bool recording, const bool motionDetectionEnabled);
 
 		bool getRecording() const;
 		int getResolution() const;
@@ -353,7 +353,6 @@ namespace smart_system
 		static std::queue<DeviceScriptVariant> script_subsequence;
 		static DeviceVariant chooseDevice();
 		static DeviceVariant chooseDevice(SmartType type);
-		//static DeviceScriptVariant chooseScript(int count);
 		static void editScript();
 		static int printScripts();
 		static void showUserMenu();
@@ -371,7 +370,7 @@ namespace smart_system
 		static FileSystem<DeviceVariant> device_file;
 		static FileSystem<DeviceScriptVariant> script_file;
 		static FileSystem<User> user_file;
-		static bool admin_acion;
+		static bool admin_action;
 	public:
 		~SmartHomeInteraction() = default;
 		SmartHomeInteraction() = default; 

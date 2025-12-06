@@ -370,6 +370,7 @@
 			
 			return lhs.day_ < rhs.day_;
 		}
+
 		//UserLocation
 
 		UserLocation::UserLocation()
@@ -1387,7 +1388,8 @@
 
 			if (!found)
 			{
-				throw runtime_error("Пользователь с именем '" + name + "' не найден");
+				cout << "Пользователь с именем '" + name + "' не найден";
+				return User();
 			}
 
 			return current_user;
@@ -2258,7 +2260,7 @@
 		FileSystem<DeviceVariant> SmartHomeInteraction::device_file;
 		FileSystem<DeviceScriptVariant> SmartHomeInteraction::script_file;
 		FileSystem<User> SmartHomeInteraction::user_file;
-		bool SmartHomeInteraction::admin_acion = false;
+		bool SmartHomeInteraction::admin_action = false;
 
 		void SmartHomeInteraction::removeScript(const DeviceVariant& target_device)
 		{
@@ -2611,6 +2613,55 @@
 			cout << "Отчет успешно сохранен в файл: " << report_filename << "\n";
 		}*/
 
+		void SmartHomeInteraction::generateUserReport()
+		{
+			string report_filename = current_user->getUserName() + "_smart_home_report.txt";
+
+			stringstream ss;
+			ss << *current_user; 
+
+
+			ofstream report_file(report_filename, ios::out | ios::trunc);
+
+			report_file << "=============================================\n";
+			report_file << "          ОТЧЕТ УМНОГО ДОМА\n";
+			report_file << "=============================================\n\n";
+
+
+			report_file << "ИНФОРМАЦИЯ О ПОЛЬЗОВАТЕЛЕ:\n";
+			report_file << "============================\n";
+
+			report_file << ss.str();
+
+			report_file << "\nАКТИВНЫЕ СЦЕНАРИИ:\n";
+			report_file << "============================\n";
+
+			auto scripts_copy = script_subsequence;
+			if (scripts_copy.empty())
+			{
+				report_file << "Нет активных сценариев\n";
+			}
+			else
+			{
+				int script_number = 1;
+				while (!scripts_copy.empty())
+				{
+					report_file << "\nСценарий #" << script_number++ << ":\n";
+
+					stringstream script_ss;
+					script_ss << scripts_copy.front();
+					report_file << script_ss.str();
+
+					report_file << "----------------------------------------\n";
+					scripts_copy.pop();
+				}
+			}
+
+			report_file.close();
+
+			cout << "Отчет создан: " << report_filename << "\n";
+		}
+
 		void SmartHomeInteraction::showSmartHomeMenu()
 		{
 			bool is_running = true;
@@ -2640,6 +2691,10 @@
 				}
 				case 1:
 				{
+					if (admin_action) {
+						cout << "В качестве User, вы можете только редактировать и удалять." << endl;
+						break;
+					}
 					auto device = chooseDevice();
 					cin >> device;
 					string user_password = current_user->getPassword();
@@ -2655,6 +2710,7 @@
 				}
 				case 2:
 				{
+
 					int count = device_file.readF();
 					if (!count) {
 						cout << "У вас нет устройств для редактирования\n";
@@ -2745,11 +2801,16 @@
 				}
 				case 4:
 				{
+
 					device_file.readF();
 					break;
 				}
 				case 5:
 				{
+					if (admin_action) {
+						cout << "В качестве User, вы можете только редактировать и удалять." << endl;
+						break;
+					}
 					device_file.sortF([](const DeviceVariant& a, const DeviceVariant& b) -> bool {
 						return std::visit([](const auto& dev_a, const auto& dev_b) -> bool {
 							string title_a = dev_a.getTitle();
@@ -2763,6 +2824,10 @@
 				}
 				case 6:
 				{
+					if (admin_action) {
+						cout << "В качестве User, вы можете только редактировать и удалять." << endl;
+						break;
+					}
 					string target_dev_name;
 					cout << "Введите название устройства: ";
 					getline(cin, target_dev_name);
@@ -2771,11 +2836,19 @@
 				}
 				case 7:
 				{
-
+					if (admin_action) {
+						cout << "В качестве User, вы можете только редактировать и удалять." << endl;
+						break;
+					}
+					generateUserReport();
 					break;
 				}
 				case 8:
 				{
+					if (admin_action) {
+						cout << "В качестве User, вы можете только редактировать и удалять." << endl;
+						break;
+					}
 					bool isOnline;
 					cout << "Устройство онлайн? (0-Нет, 1-Да): ";
 					
@@ -2804,6 +2877,10 @@
 				}
 				case 9:
 				{
+					if (admin_action) {
+						cout << "В качестве User, вы можете только редактировать и удалять." << endl;
+						break;
+					}
 					Date first_date, second_date;
 					cout << "Введите первую дату:" << endl;
 					cin >> first_date;
@@ -2833,6 +2910,10 @@
 				}
 				case 10:
 				{
+					if (admin_action) {
+						cout << "В качестве User, вы можете только редактировать и удалять." << endl;
+						break;
+					}
 					int count = device_file.readF();
 					if (!count)
 						cout << "К сожалению вы не можете добавить сценарий." << std::endl;
@@ -3013,8 +3094,11 @@
 					cout << "Введите имя аккаунта: ";
 					getline(cin, name);
 					User temp_user = user_file.chooseUser_a(name);
+					if (temp_user == User()) break;
 					*current_user = temp_user;
+					admin_action = true;
 					showMainMenu();
+					admin_action = false;
 					break;
 				}
 				case 0:

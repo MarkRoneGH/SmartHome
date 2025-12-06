@@ -1,0 +1,28 @@
+=============================================
+          ÎÒ×ÅÒ ÓÌÍÎÃÎ ÄÎÌÀ
+=============================================
+
+ÈÍÔÎĞÌÀÖÈß Î ÏÎËÜÇÎÂÀÒÅËÅ:
+============================
+Username: Mark
+Password(Hashed): Mark1234_49380
+Location: Country: Belarus, City: Minsk, Street: Marshala Losica
+Birth Date: 12.3.2007
+Role: User
+
+ÀÊÒÈÂÍÛÅ ÑÖÅÍÀĞÈÈ:
+============================
+
+Ñöåíàğèé #1:
+[Thermostat Script]
+Device Script: My_script
+Duration: 10 minutes
+Device: Device Title: My_new_thermo
+Type: Thermostat
+Online: No
+Purchase Date: 12.2.2003
+Current Temperature: 200°C
+Target Temperature: 111°C
+Mode: 1
+
+----------------------------------------

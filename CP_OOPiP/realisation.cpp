@@ -27,8 +27,11 @@
 
 		string hashPassword(const string& user_name, const string& password)
 		{
-			return string(user_name) + password + "_" + std::to_string(password.size() * 12345);
-			/*return "salted_" + password + "_" + std::to_string(password.size() * 12345);*/
+			string attempt_password = string(user_name) + password + "_" + std::to_string(password.size() * 12345);
+
+			size_t hash_value = std::hash<std::string>{}(attempt_password);
+
+			return std::to_string(hash_value);
 		}
 
 		//SmartSmth
@@ -103,7 +106,7 @@
 				}
 				out << "\n";
 				out << setw(20) << left << "Онлайн: " << (device.isOnline ? " Да" : " Нет") << "\n";
-				out << setw(21) << left << "Дата покупки: " << device.release_date << "\n";
+				out << setw(21) << left << "Дата релиза: " << device.release_date << "\n";
 			}
 			return out;
 		}	
@@ -163,7 +166,7 @@
 					}
 				}
 
-				cout << "Введите дату покупки (дд.мм.гггг): ";
+				cout << "Введите дату релиза (дд.мм.гггг): ";
 				in >> device.release_date;
 			}
 			return in;
@@ -1302,7 +1305,7 @@
 
 			smartFile.seekg(0, ios::beg);
 
-			cout << "\n=== ВСЕ ПОЛЬЗОВАТЕЛИ ===\n";
+			cout << "\nВСЕ ПОЛЬЗОВАТЕЛИ\n";
 			int user_count = 0;
 			User current_user;
 
@@ -1612,9 +1615,9 @@
 
 		DeviceVariant FileSystem<DeviceVariant>::chooseCertainDevice(const int count)
 		{
-			if (count <= 0) {
-				throw std::runtime_error("Нет доступных устройств для выбора");
-			}
+			//if (count <= 0) {
+			//	throw std::runtime_error("Нет доступных устройств для выбора");
+			//}
 
 			smartFile.open(file_name, ios::in | ios::binary);
 			if (!smartFile.is_open()) {
@@ -2526,129 +2529,6 @@
 				<< "-->  0. Выход..." << endl << ">> ";
 		}
 
-		/*void SmartHomeInteraction::generateUserReport()
-		{
-			string report_filename = current_user->getUserName() + "_smart_home_report.txt";
-			ofstream report_file(report_filename, ios::out | ios::trunc);
-
-			if (!report_file.is_open())
-				throw runtime_error("Не удалось создать файл отчета: " + report_filename);
-
-			report_file << "=============================================\n";
-			report_file << "          ОТЧЕТ УМНОГО ДОМА\n";
-			report_file << "=============================================\n\n";
-
-
-			report_file << "ИНФОРМАЦИЯ О ПОЛЬЗОВАТЕЛЕ:\n";
-			report_file << "============================\n";
-			report_file << current_user << "\n";
-
-			report_file << "УСТРОЙСТВА (" << devices.size() << "):\n";
-			report_file << "============================\n";
-
-			if (device.empty())
-			{
-				report_file << "Нет подключенных устройств\n";
-			}
-			else
-			{
-				int device_number = 1;
-				for (const auto& device : devices)
-				{
-					report_file << "\nУстройство #" << device_number++ << ":\n";
-					report_file << device;
-					report_file << "----------------------------------------\n";
-				}
-			}
-
-			report_file << "\nАКТИВНЫЕ СЦЕНАРИИ:\n";
-			report_file << "============================\n";
-
-			auto scripts_copy = script_subsequence;
-			if (scripts_copy.empty())
-			{
-				report_file << "Нет активных сценариев\n";
-			}
-			else
-			{
-				int script_number = 1;
-				while (!scripts_copy.empty())
-				{
-					report_file << "\nСценарий #" << script_number++ << ":\n";
-					report_file << scripts_copy.front();
-					report_file << "----------------------------------------\n";
-					scripts_copy.pop();
-				}
-			}
-
-			report_file << "\nСТАТИСТИКА:\n";
-			report_file << "============================\n";
-			report_file << "Всего устройств: " << devices.size() << "\n";
-
-
-			int lights_count = 0, thermos_count = 0, cameras_count = 0;
-			int online_count = 0;
-
-			for (const auto& device : devices)
-			{
-
-				SmartType type = visit([](auto&& arg) {
-					return arg.getType();
-					}, device);
-
-
-				switch (type)
-				{
-				case SmartType::Light:
-					lights_count++;
-					break;
-				case SmartType::Thermo:
-					thermos_count++;
-					break;
-				case SmartType::SecCamera:
-					cameras_count++;
-					break;
-				}
-
-
-				if (std::visit([](auto&& arg) { return arg.getOnline(); }, device))
-				{
-					online_count++;
-				}
-			}
-
-			report_file << "  • Умных ламп: " << lights_count << "\n";
-			report_file << "  • Термостатов: " << thermos_count << "\n";
-			report_file << "  • Камер безопасности: " << cameras_count << "\n";
-			report_file << "Активных сценариев: " << script_subsequence.size() << "\n";
-
-			if (!devices.empty())
-			{
-				double online_percent = (online_count * 100.0) / devices.size();
-				report_file << "Устройств онлайн: " << online_count << " из " << devices.size()
-					<< " (" << fixed << setprecision(1) << online_percent << "%)\n";
-			}
-			else
-			{
-				report_file << "Устройств онлайн: 0 из 0 (0.0%)\n";
-			}
-
-			time_t now = time(0);
-			tm* local_time = localtime(&now);
-			report_file << "\nОтчет сгенерирован: "
-				<< (local_time->tm_year + 1900) << "-"
-				<< setw(2) << setfill('0') << (local_time->tm_mon + 1) << "-"
-				<< setw(2) << setfill('0') << local_time->tm_mday << " "
-				<< setw(2) << setfill('0') << local_time->tm_hour << ":"
-				<< setw(2) << setfill('0') << local_time->tm_min << ":"
-				<< setw(2) << setfill('0') << local_time->tm_sec << "\n";
-
-			report_file << "=============================================\n";
-
-			report_file.close();
-			cout << "Отчет успешно сохранен в файл: " << report_filename << "\n";
-		}*/
-
 		void SmartHomeInteraction::generateFullReport()
 		{
 			string report_filename;
@@ -2772,7 +2652,6 @@
 
 					int count = device_file.readF();
 					if (!count) {
-						cout << "У вас нет устройств для редактирования\n";
 						break;
 					}
 					cout << "Выбор устройства для редактирования (1-" << count << ")." << endl;
@@ -2842,6 +2721,7 @@
 					int choice;
 					if (!count)
 						break;
+					cout << "Введите свой выбор: " << endl;
 					while (true) {
 						cin >> choice;
 						if (cin.fail() || choice < 1 || choice > count) {
@@ -3125,7 +3005,7 @@
 			int choice;
 			while (is_running)
 			{
-				cout << "Меню учетной записи:" << endl
+				cout << "Меню админских операций:" << endl
 					<< "--> 1.Информация всех зарегистрированных аккаунтов." << endl
 					<< "--> 2.Войти в качестве User." << endl
 					<< "--> 0.Выход..." << endl << ">> ";

@@ -49,6 +49,10 @@ namespace smart_system
 	using enum SmartType;
 	using enum UserRole;
 
+	string getPasswordWithDots();
+
+	string hashPassword(const string& user_name, const string& password);
+
 	class Date final //+~
 	{
 		unsigned short year_;
@@ -340,7 +344,6 @@ namespace smart_system
 
 	static class SmartHomeInteraction final
 	{
-		/*		void setFormat(); */// setf флаги формат.
 		static void removeScript(const DeviceVariant& device);
 		static bool showAccountMenu();
 		static void showAdminOperationsMenu();

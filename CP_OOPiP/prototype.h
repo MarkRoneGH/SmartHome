@@ -17,13 +17,14 @@
 #include <functional>
 #include <cctype> 
 
-#define SIZE_BUFF 64
-#define OpenFileERROR "Проблема открытия файла..."
+constexpr auto SIZE_BUFF = 64;
+constexpr auto OpenFileERROR = "Проблема открытия файла...";
 
 using namespace std;
 
 namespace smart_system
 {
+	class UniversalMenu;
 	template<typename T>
 	class FileSystem;
 	class SmartSmth;
@@ -49,9 +50,57 @@ namespace smart_system
 	using enum SmartType;
 	using enum UserRole;
 
+	bool isWhitespace(char c);
+
+	void trimString(char* str);
+
+	void trimString(std::string& str);
+
 	string getPasswordWithDots();
 
 	string hashPassword(const string& user_name, const string& password);
+
+	class UniversalMenu {
+	private:
+		std::vector<std::string> items;
+		std::vector<std::function<void()>> actions;
+		std::string header;
+		bool showExitOption;
+		bool loopUntilExit;
+		int selectedIndex;
+		HANDLE hConsole;
+
+		void clearScreen();
+		void setCursorPosition(int x, int y);
+		void showCursor(bool visible);
+		void drawMenu();
+		int getArrowKey();
+
+	public:
+
+		UniversalMenu();
+		UniversalMenu(const std::string& menuTitle);
+		UniversalMenu(const std::vector<std::string>& menuItems);
+		UniversalMenu(const std::vector<std::string>& menuItems,
+			const std::vector<std::function<void()>>& menuActions);
+		int run(); 
+		int runOnce(); 
+		void execute();
+		void setTitle(const std::string& title);
+		void setItems(const std::vector<std::string>& menuItems);
+		void setActions(const std::vector<std::function<void()>>& menuActions);
+		void addItem(const std::string& item, std::function<void()> action = nullptr);
+		void clear();
+		void enableExitOption(bool enable = true);
+		void enableLoop(bool enable = true);
+		static int show(const std::vector<std::string>& items,
+			const std::string& title = "Меню");
+		static int show(const std::vector<std::string>& items,
+			const std::vector<std::function<void()>>& actions,
+			const std::string& title = "Меню");
+		static void pause(const std::string& message = "Нажмите любую клавишу...");
+		static bool confirm(const std::string& question = "Вы уверены?");
+	};
 
 	class Date final //+~
 	{
@@ -78,7 +127,7 @@ namespace smart_system
 		~Date() = default;
 	};
 
-	class SmartSmth abstract
+	class SmartSmth 
 	{
 	protected:
 		char owner_password[SIZE_BUFF];
@@ -353,16 +402,13 @@ namespace smart_system
 		static DeviceVariant chooseDevice(SmartType type);
 		static void editScript();
 		static int printScripts();
-		static void showUserMenu();
 		static void showAdminMenu();
 		static void showGuestMenu();
 		static void showMainMenu();
 		static void showAuthorMenu();
 		static void showSmartHomeMenu();
 		static void showDeviceCatalogHeaderMenu();
-		static void showSHOHeaderMenu();
 		static void generateFullReport();
-		static void showRoleHeaderMenu();
 		static void showRegistrationMenu();
 		static void showLoginMenu();
 		static FileSystem<DeviceVariant> device_file;

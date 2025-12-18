@@ -45,7 +45,7 @@
   <Class Name="smart_system::SmartHomeInteraction">
     <Position X="9.75" Y="4.25" Width="2.5" />
     <TypeIdentifier>
-      <HashCode>AAEAgCQAAgFAACAAhgAgABAIAAAAABAoIAQQEAAwgFA=</HashCode>
+      <HashCode>AAEAgAQAAgFAACAAhgAAABAIAAAAABAoIAQQEAAwgFA=</HashCode>
       <FileName>prototype.h</FileName>
     </TypeIdentifier>
   </Class>
@@ -81,6 +81,13 @@
     <Position X="12.75" Y="5.25" Width="2.5" />
     <TypeIdentifier>
       <HashCode>AAAAAAiAAAAAAAAAAABAAAAgECAAAAAACQAAAAAAAAA=</HashCode>
+      <FileName>prototype.h</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="smart_system::UniversalMenu">
+    <Position X="16" Y="0.5" Width="2.5" />
+    <TypeIdentifier>
+      <HashCode>AEAAAgQAAFBABCAAEEikgEACCCACgAAABAAgCAAAIAA=</HashCode>
       <FileName>prototype.h</FileName>
     </TypeIdentifier>
   </Class>

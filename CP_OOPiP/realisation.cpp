@@ -2,6 +2,41 @@
 	#pragma warning(disable:4996)
 	namespace smart_system
 	{
+		bool isWhitespace(char c) {
+			return c == ' ' || c == '\t' || c == '\n' || c == '\r';
+		}
+
+		void trimString(char* str) {
+			if (str == nullptr || str[0] == '\0') return;
+
+			size_t len = strlen(str);
+			while (len > 0 && isWhitespace(str[len - 1])) {
+				str[--len] = '\0';
+			}
+
+			size_t start = 0;
+			while (str[start] != '\0' && isWhitespace(str[start])) {
+				start++;
+			}
+
+			if (start > 0) {
+				strcpy(str, str + start);
+			}
+		}
+
+		void trimString(std::string& str) {
+			size_t start = 0;
+			while (start < str.length() && isWhitespace(str[start])) {
+				start++;
+			}
+
+			size_t end = str.length();
+			while (end > start && isWhitespace(str[end - 1])) {
+				end--;
+			}
+
+			str = str.substr(start, end - start);
+		}
 
 		std::string getPasswordWithDots() {
 			std::string password;
@@ -32,6 +67,254 @@
 			size_t hash_value = std::hash<std::string>{}(attempt_password);
 
 			return std::to_string(hash_value);
+		}
+
+		UniversalMenu::UniversalMenu()
+			: showExitOption(false), loopUntilExit(false), selectedIndex(0) {
+			hConsole = GetStdHandle(STD_OUTPUT_HANDLE);
+			SetConsoleTextAttribute(hConsole, 7); 
+		}
+
+		UniversalMenu::UniversalMenu(const std::string& menuTitle)
+			: header(menuTitle), showExitOption(false), loopUntilExit(false), selectedIndex(0) {
+			hConsole = GetStdHandle(STD_OUTPUT_HANDLE);
+			SetConsoleTextAttribute(hConsole, 7);
+		}
+
+		UniversalMenu::UniversalMenu(const std::vector<std::string>& menuItems)
+			: items(menuItems), showExitOption(false), loopUntilExit(false), selectedIndex(0) {
+			hConsole = GetStdHandle(STD_OUTPUT_HANDLE);
+			SetConsoleTextAttribute(hConsole, 7);
+		}
+
+		UniversalMenu::UniversalMenu(const std::vector<std::string>& menuItems,
+			const std::vector<std::function<void()>>& menuActions)
+			: items(menuItems), actions(menuActions), showExitOption(false),
+			loopUntilExit(false), selectedIndex(0) {
+			hConsole = GetStdHandle(STD_OUTPUT_HANDLE);
+			SetConsoleTextAttribute(hConsole, 7);
+		}
+
+		void UniversalMenu::clearScreen() {
+			system("cls");
+		}
+
+		void UniversalMenu::setCursorPosition(int x, int y) {
+			COORD coord;
+			coord.X = x;
+			coord.Y = y;
+			SetConsoleCursorPosition(hConsole, coord);
+		}
+
+		void UniversalMenu::showCursor(bool visible) {
+			CONSOLE_CURSOR_INFO cursorInfo;
+			GetConsoleCursorInfo(hConsole, &cursorInfo);
+			cursorInfo.bVisible = visible;
+			SetConsoleCursorInfo(hConsole, &cursorInfo);
+		}
+
+		void UniversalMenu::drawMenu() {
+			clearScreen();
+
+			// Выводим заголовок
+			if (!header.empty()) {
+				std::cout << header << "\n\n";
+			}
+
+			// Выводим пункты меню
+			for (size_t i = 0; i < items.size(); i++) {
+				if (i == selectedIndex) {
+					SetConsoleTextAttribute(hConsole, 10); // Зеленый
+					std::cout << "  > " << items[i] << std::endl; // Используем обычную стрелку
+					SetConsoleTextAttribute(hConsole, 7); // Белый
+				}
+				else {
+					std::cout << "    " << items[i] << std::endl;
+				}
+			}
+
+			// Опция выхода (только если включена и она отдельная)
+			if (showExitOption) {
+				if (selectedIndex == items.size()) {
+					SetConsoleTextAttribute(hConsole, 12); // Красный
+					std::cout << "\n  > Выход" << std::endl;
+					SetConsoleTextAttribute(hConsole, 7);
+				}
+				else {
+					std::cout << "\n    Выход" << std::endl;
+				}
+			}
+
+			std::cout << "\nИспользуйте стрелки ВВЕРХ/ВНИЗ, Enter - выбрать, Esc - выход\n";
+		}
+
+		int UniversalMenu::getArrowKey() {
+			int key = _getch();
+
+			if (key == 224 || key == 0) {
+				key = _getch();
+				switch (key) {
+				case 72: return 1; // Вверх
+				case 80: return 2; // Вниз
+				default: return 0;
+				}
+			}
+			else if (key == 13) return 3; // Enter
+			else if (key == 27) return 4; // Escape
+			else if (key == 8)  return 5; // Backspace
+
+			return 0;
+		}
+
+	
+		int UniversalMenu::run() {
+			if (items.empty()) return -1;
+
+			showCursor(false);
+
+			while (true) {
+				drawMenu();
+				int key = getArrowKey();
+
+				int totalItems = items.size() + (showExitOption ? 1 : 0);
+
+				switch (key) {
+				case 1: // Вверх
+					selectedIndex = (selectedIndex > 0) ? selectedIndex - 1 : totalItems - 1;
+					break;
+
+				case 2: // Вниз
+					selectedIndex = (selectedIndex < totalItems - 1) ? selectedIndex + 1 : 0;
+					break;
+
+				case 3: // Enter
+					showCursor(true);
+					if (showExitOption && selectedIndex == items.size()) {
+						return -2; // ⭐ ИЗМЕНЕНИЕ: Возвращаем -2 для "Выход"
+					}
+					if (selectedIndex < items.size()) {
+						return selectedIndex; // Выбран пункт меню
+					}
+					break;
+
+				case 4: // Escape
+					showCursor(true);
+					return -1; // ⭐ -1 остается для Escape
+
+				default:
+					// Игнорируем другие клавиши
+					break;
+				}
+			}
+		}
+
+		int UniversalMenu::runOnce() {
+			loopUntilExit = false;
+			return run();
+		}
+
+		void UniversalMenu::execute() {
+			while (true) {
+				int choice = run();
+
+				if (choice == -1) {
+					// Пользователь нажал Escape
+					return; // Возвращаемся из меню
+				}
+				else if (choice == -2) {
+					// Пользователь выбрал "Выход" из меню
+					return; // Возвращаемся из меню
+				}
+				else if (choice >= 0 && choice < actions.size() && actions[choice]) {
+					actions[choice](); // Выполняем действие
+
+					// ⭐ ВАЖНО: После выполнения действия решаем, продолжать ли показ меню
+					if (!loopUntilExit) {
+						return; // Если не циклическое меню - выходим
+					}
+					// Иначе цикл продолжается и меню показывается снова
+				}
+			}
+		}
+
+
+		void UniversalMenu::setTitle(const std::string& title) {
+			header = title;
+		}
+
+		void UniversalMenu::setItems(const std::vector<std::string>& menuItems) {
+			items = menuItems;
+			selectedIndex = 0;
+		}
+
+		void UniversalMenu::setActions(const std::vector<std::function<void()>>& menuActions) {
+			actions = menuActions;
+		}
+
+		void UniversalMenu::addItem(const std::string& item, std::function<void()> action) {
+			items.push_back(item);
+			actions.push_back(action);
+		}
+
+		void UniversalMenu::clear() {
+			items.clear();
+			actions.clear();
+			selectedIndex = 0;
+		}
+
+		void UniversalMenu::enableExitOption(bool enable) {
+			showExitOption = enable;
+		}
+
+		void UniversalMenu::enableLoop(bool enable) {
+			loopUntilExit = enable;
+		}
+
+		int UniversalMenu::show(const std::vector<std::string>& items, const std::string& title) {
+			UniversalMenu menu(items);
+			menu.setTitle(title);
+			menu.enableExitOption(true);
+			return menu.run(); // ⭐ Теперь возвращает -2 для "Выход", -1 для Escape
+		}
+
+		int UniversalMenu::show(const std::vector<std::string>& items,
+			const std::vector<std::function<void()>>& actions,
+			const std::string& title) {
+			UniversalMenu menu(items, actions);
+			menu.setTitle(title);
+			menu.enableExitOption(true);
+
+			// ⭐ Исправленная версия для работы с действиями
+			while (true) {
+				int choice = menu.run();
+
+				if (choice == -1 || choice == -2) {
+					return choice; // Возвращаем код выхода
+				}
+
+				if (choice >= 0 && choice < actions.size() && actions[choice]) {
+					actions[choice](); // Выполняем действие
+				}
+
+				// После выполнения действия спрашиваем, продолжить?
+				// Или просто продолжаем цикл для показа меню снова
+			}
+
+			return -1;
+		}
+
+		void UniversalMenu::pause(const std::string& message) {
+			std::cout << "\n" << message;
+			_getch();
+			std::cout << std::endl;
+		}
+
+		bool UniversalMenu::confirm(const std::string& question) {
+			std::cout << "\n" << question << " (y/n): ";
+			char ch;
+			std::cin >> ch;
+			std::cin.ignore(10000, '\n');
+			return (ch == 'y' || ch == 'Y');
 		}
 
 		//SmartSmth
@@ -150,7 +433,27 @@
 			else {
 
 				cout << "Введите название устройства: ";
-				in.getline(device.title, SIZE_BUFF);
+				while (true) {
+					in.getline(device.title, SIZE_BUFF);
+
+					trimString(device.title);
+
+					if (device.title[0] == '\0') {
+						cout << "Ошибка: название не может быть пустым! Введите название: ";
+					}
+					else if (strlen(device.title) < 2) {
+						cout << "Ошибка: название слишком короткое! Введите название: ";
+					}
+					else if (strlen(device.title) == SIZE_BUFF - 1 && in.fail()) {
+						in.clear();
+						in.ignore((numeric_limits<streamsize>::max)(), '\n');
+						cout << "Ошибка: название слишком длинное! Введите название покороче: ";
+					}
+					else
+					{
+						break;
+					}
+				}
 
 				cout << "Устройство онлайн? (0-Нет, 1-Да): ";
 				while (true) {
@@ -166,7 +469,7 @@
 					}
 				}
 
-				cout << "Введите дату релиза (дд.мм.гггг): ";
+				cout << "Введите дату релиза (дд.мм.гггг)\n";
 				in >> device.release_date;
 			}
 			return in;
@@ -477,11 +780,76 @@
 			}
 			else {
 				cout << "Введите страну: ";
-				in.getline(location.country, SIZE_BUFF);
+				while (true) {
+					in.getline(location.country, SIZE_BUFF);
+
+					trimString(location.country);
+
+					if (in.fail()) {
+						in.clear();
+						in.ignore((numeric_limits<streamsize>::max)(), '\n');
+						cout << "Ошибка: название слишком длинное! Введите страну покороче: ";
+						continue;
+					}
+
+					if (location.country[0] == '\0') {
+						cout << "Ошибка: страна не может быть пустой! Введите страну: ";
+					}
+					else if (strlen(location.country) < 2) {
+						cout << "Ошибка: название страны слишком короткое! Введите страну: ";
+					}
+					else {
+						break;
+					}
+				}
+
 				cout << "Введите город: ";
-				in.getline(location.city, SIZE_BUFF);
+				while (true) {
+					in.getline(location.city, SIZE_BUFF);
+
+					trimString(location.city);
+
+					if (in.fail()) {
+						in.clear();
+						in.ignore((numeric_limits<streamsize>::max)(), '\n');
+						cout << "Ошибка: название слишком длинное! Введите город покороче: ";
+						continue;
+					}
+
+					if (location.city[0] == '\0') {
+						cout << "Ошибка: город не может быть пустым! Введите город: ";
+					}
+					else if (strlen(location.city) < 2) {
+						cout << "Ошибка: название города слишком короткое! Введите город: ";
+					}
+					else {
+						break;
+					}
+				}
+
 				cout << "Введите улицу: ";
-				in.getline(location.street, SIZE_BUFF);
+				while (true) {
+					in.getline(location.street, SIZE_BUFF);
+
+					trimString(location.street);
+
+					if (in.fail()) {
+						in.clear();
+						in.ignore((numeric_limits<streamsize>::max)(), '\n');
+						cout << "Ошибка: название слишком длинное! Введите улицу покороче: ";
+						continue;
+					}
+
+					if (location.street[0] == '\0') {
+						cout << "Ошибка: улица не может быть пустой! Введите улицу: ";
+					}
+					else if (strlen(location.street) < 2) {
+						cout << "Ошибка: название улицы слишком короткое! Введите улицу: ";
+					}
+					else {
+						break;
+					}
+				}
 			}
 			return in;
 		}
@@ -605,12 +973,49 @@
 			else {
 
 				cout << "Введите имя пользователя: ";
-				in.getline(user.user_name, SIZE_BUFF);
+				while (true) {
+					in.getline(user.user_name, SIZE_BUFF);
+
+					trimString(user.user_name);
+
+					if (in.fail()) {
+						in.clear();
+						in.ignore((numeric_limits<streamsize>::max)(), '\n');
+						cout << "Ошибка: имя слишком длинное! Введите имя покороче: ";
+						continue;
+					}
+
+					if (user.user_name[0] == '\0') {
+						cout << "Ошибка: имя не может быть пустым! Введите имя пользователя: ";
+					}
+					else if (strlen(user.user_name) < 3) {
+						cout << "Ошибка: имя слишком короткое (минимум 3 символа)! Введите имя пользователя: ";
+					}
+					else {
+						break;
+					}
+				}
 
 
 				string temp_password;
 
-				temp_password = getPasswordWithDots();
+				while (true) {
+					temp_password = getPasswordWithDots();
+					trimString(temp_password);
+
+					if (temp_password.length() == 0) {
+						cout << "Ошибка: пароль не может быть пустым!";
+					}
+					else if (temp_password.length() < 4) {
+						cout << "Ошибка: пароль слишком короткий (минимум 4 символов)!";
+					}
+					else if (temp_password.length() > 50) {
+						cout << "Ошибка: пароль слишком длинный!";
+					}
+					else {
+						break;
+					}
+				}
 				temp_password = hashPassword(user.getUserName(),temp_password);
 				user.setPassword(temp_password);
 
@@ -727,7 +1132,28 @@
 				}
 
 				cout << "Введите цвет: ";
-				in.getline(light.color, SIZE_BUFF);
+				while (true) {
+					in.getline(light.color, SIZE_BUFF);
+
+					trimString(light.color);
+
+					if (in.fail()) {
+						in.clear();
+						in.ignore((numeric_limits<streamsize>::max)(), '\n');
+						cout << "Ошибка: название слишком длинное! Введите цвет покороче: ";
+						continue;
+					}
+
+					if (light.color[0] == '\0') {
+						cout << "Ошибка: цвет не может быть пустым! Введите цвет: ";
+					}
+					else if (strlen(light.color) < 2) {
+						cout << "Ошибка: название цвета слишком короткое! Введите цвет: ";
+					}
+					else {
+						break;
+					}
+				}
 			}
 			return in;
 		}
@@ -838,10 +1264,10 @@
 				thermostat.mode[mode_size] = '\0';
 			}
 			else {
-				
+
 				in >> static_cast<SmartSmth&>(thermostat);
 
-				
+
 				cout << "Введите текущую температуру: ";
 				while (true) {
 					in >> thermostat.currentTemperature;
@@ -849,6 +1275,14 @@
 						cin.clear();
 						cin.ignore((numeric_limits<streamsize>::max)(), '\n');
 						cout << "Ошибка ввода! Введите число: ";
+					}
+					else if (thermostat.currentTemperature < -50) {
+						cin.ignore((numeric_limits<streamsize>::max)(), '\n');
+						cout << "Ошибка: температура не может быть ниже -50°C! Введите температуру: ";
+					}
+					else if (thermostat.currentTemperature > 100) {
+						cin.ignore((numeric_limits<streamsize>::max)(), '\n');
+						cout << "Ошибка: температура не может быть выше 100°C! Введите температуру: ";
 					}
 					else {
 						cin.ignore((numeric_limits<streamsize>::max)(), '\n');
@@ -864,14 +1298,62 @@
 						cin.ignore((numeric_limits<streamsize>::max)(), '\n');
 						cout << "Ошибка ввода! Введите число: ";
 					}
+					else if (thermostat.targetTemperature < -50) {
+						cin.ignore((numeric_limits<streamsize>::max)(), '\n');
+						cout << "Ошибка: температура не может быть ниже -50°C! Введите температуру: ";
+					}
+					else if (thermostat.targetTemperature > 100) {
+						cin.ignore((numeric_limits<streamsize>::max)(), '\n');
+						cout << "Ошибка: температура не может быть выше 100°C! Введите температуру: ";
+					}
+					else if (thermostat.targetTemperature == thermostat.currentTemperature) {
+						cin.ignore((numeric_limits<streamsize>::max)(), '\n');
+						cout << "Ошибка: целевая температура не может быть равна текущей! Введите другую температуру: ";
+					}
 					else {
 						cin.ignore((numeric_limits<streamsize>::max)(), '\n');
 						break;
 					}
 				}
 
-				cout << "Введите режим (обогрев/охлаждение/авто): ";
-				in.getline(thermostat.mode, SIZE_BUFF);
+				cout << "Введите режим (эко/поддержания влажности/авто): ";
+				while (true) {
+					in.getline(thermostat.mode, SIZE_BUFF);
+
+					trimString(thermostat.mode);
+
+					if (in.fail()) {
+						in.clear();
+						in.ignore((numeric_limits<streamsize>::max)(), '\n');
+						cout << "Ошибка: название слишком длинное! Введите режим покороче: ";
+						continue;
+					}
+
+					if (thermostat.mode[0] == '\0') {
+						cout << "Ошибка: режим не может быть пустым! Введите режим: ";
+					}
+					else {
+						string mode_str = thermostat.mode;
+						for (char& c : mode_str) {
+							if (c >= 'А' && c <= 'Я') {
+								c = c + ('а' - 'А');
+							}
+							else if (c >= 'A' && c <= 'Z') {
+								c = c + ('a' - 'A'); 
+							}
+						}
+
+						if (mode_str != "эко" && mode_str != "поддержания влажности" && mode_str != "авто") {
+							cout << "Ошибка: доступные режимы: эко, поддержания влажности, авто. Введите режим: ";
+						}
+						else {
+							if (mode_str == "эко") strcpy(thermostat.mode, "Эко");
+							else if (mode_str == "авто") strcpy(thermostat.mode, "Авто");
+							else if (mode_str == "поддержания влажности") strcpy(thermostat.mode, "Поддержания влажности");
+							break;
+						}
+					}
+				}
 			}
 			return in;
 		}
@@ -1311,10 +1793,13 @@
 
 			while (smartFile >> current_user)
 			{
-				user_count++;
-				cout << "\nПользователь #" << user_count << ":\n";
-				cout << current_user;
-				cout << "----------------------------------------\n";
+				if (current_user.getRole() != Admin_)
+				{
+					user_count++;
+					cout << "\nПользователь #" << user_count << ":\n";
+					cout << current_user;
+					cout << "----------------------------------------\n";
+				}
 			}
 
 			smartFile.close();
@@ -1769,147 +2254,6 @@
 			cout << "Устройство на позиции " << pos << " успешно удалено\n";
 			return device_to_remove;
 		}
-
-		/*DeviceVariant FileSystem<DeviceVariant>::editF(int pos, const DeviceVariant& new_device)
-		{
-			if (pos < 1) {
-				throw std::invalid_argument("Позиция должна быть положительным числом");
-			}
-
-			smartFile.open(file_name, ios::in | ios::out | ios::binary);
-			if (!smartFile.is_open()) {
-				throw std::runtime_error("Не удалось открыть файл устройств: " + file_name);
-			}
-
-			smartFile.seekg(0, ios::end);
-			std::streampos fileSize = smartFile.tellg();
-			if (fileSize <= 0) {
-				smartFile.close();
-				throw std::runtime_error("Файл устройств пуст");
-			}
-			smartFile.seekg(0, ios::beg);
-
-			DeviceVariant old_device;
-			int current_pos = 1;
-			std::streampos edit_position = 0;
-
-			while (current_pos < pos) {
-				edit_position = smartFile.tellg();
-
-				DeviceVariant temp;
-				if (!(smartFile >> temp)) {
-					smartFile.close();
-					throw std::runtime_error("Ошибка чтения устройства на позиции " + std::to_string(current_pos));
-				}
-				current_pos++;
-			}
-
-
-			edit_position = smartFile.tellg();
-
-
-			if (!(smartFile >> old_device)) {
-				smartFile.close();
-				throw std::runtime_error("Не удалось прочитать устройство для редактирования на позиции " + std::to_string(pos));
-			}
-
-			smartFile.seekp(edit_position);
-
-
-			smartFile << new_device;
-
-			smartFile.close();
-
-			cout << "Устройство на позиции " << pos << " успешно отредактировано\n";
-			cout << "Возвращаемое старое устройство можно использовать для удаления в сценариях при необходимости\n";
-
-			return old_device;
-		}*/
-
-		/*DeviceVariant FileSystem<DeviceVariant>::editF(const DeviceVariant& old_device, const DeviceVariant& new_device)
-		{
-			if (pos < 1) {
-				throw std::invalid_argument("Позиция должна быть положительным числом");
-			}
-
-			std::ifstream inFile(file_name, std::ios::binary);
-			if (!inFile.is_open()) {
-				throw std::runtime_error("Не удалось открыть файл устройств: " + file_name);
-			}
-
-			std::string temp_file_name = file_name + ".tmp";
-			std::ofstream outFile(temp_file_name, std::ios::binary);
-			if (!outFile.is_open()) {
-				inFile.close();
-				throw std::runtime_error("Не удалось создать временный файл");
-			}
-
-			DeviceVariant old_device;
-			int current_pos = 0;
-			bool device_found = false;
-
-			while (inFile.peek() != EOF) {
-				current_pos++;
-
-				if (current_pos == pos) {
-
-					inFile >> old_device;
-
-					if (!inFile.good() && !inFile.eof()) {
-						inFile.close();
-						outFile.close();
-						std::filesystem::remove(temp_file_name);
-						throw std::runtime_error("Ошибка чтения устройства на позиции " + std::to_string(pos));
-					}
-
-					device_found = true;
-					outFile << new_device;
-
-					if (!outFile.good()) {
-						inFile.close();
-						outFile.close();
-						std::filesystem::remove(temp_file_name);
-						throw std::runtime_error("Ошибка записи нового устройства во временный файл");
-					}
-				}
-				else {
-
-					DeviceVariant device;
-					inFile >> device;
-
-					if (!inFile.good() && !inFile.eof()) {
-						inFile.close();
-						outFile.close();
-						std::filesystem::remove(temp_file_name);
-						throw std::runtime_error("Ошибка чтения устройства на позиции " + std::to_string(current_pos));
-					}
-
-					outFile << device;
-
-					if (!outFile.good()) {
-						inFile.close();
-						outFile.close();
-						std::filesystem::remove(temp_file_name);
-						throw std::runtime_error("Ошибка записи устройства во временный файл");
-					}
-				}
-			}
-
-			inFile.close();
-			outFile.close();
-
-			if (!device_found) {
-				std::filesystem::remove(temp_file_name);
-				throw std::runtime_error("Устройство на позиции " + std::to_string(pos) + " не найдено");
-			}
-
-
-				std::filesystem::copy(temp_file_name, file_name, std::filesystem::copy_options::overwrite_existing);
-				std::filesystem::remove(temp_file_name);
-		
-			std::cout << "Устройство на позиции " << pos << " успешно отредактировано\n";
-			return old_device;
-		}*/
 
 		void FileSystem<DeviceVariant>::editF(const DeviceVariant& old_device, const DeviceVariant& new_device)
 		{
@@ -2439,49 +2783,44 @@
 
 		DeviceVariant SmartHomeInteraction::chooseDevice()
 		{
-			bool is_running = true;
-			while (is_running)
+			vector<string> menuItems = {
+				"1. Умная лампа",
+				"2. Термостат",
+				"3. Умная камера"
+			};
+
+			vector<function<DeviceVariant()>> actions = {
+				[]() -> DeviceVariant {
+					return SmartLight();
+				},
+				[]() -> DeviceVariant {
+					return Thermostat();
+				},
+				[]() -> DeviceVariant {
+					return SecurityCamera();
+				}
+			};
+
+			while (true)
 			{
-				showDeviceCatalogHeaderMenu();
-				std::cout << "Выберите тип устройства:" << std::endl;
-				short choice;
-				while (true) {
-					cin >> choice;
-					if (cin.fail()) {
-						cin.clear();
-						cin.ignore((numeric_limits<streamsize>::max)(), '\n');
-						cout << "Ошибка ввода! Введите число: ";
-					}
-					else {
-						cin.ignore((numeric_limits<streamsize>::max)(), '\n');
-						break;
-					}
-				}
-				switch (choice)
-				{
-				case 0:
-				{
-					SmartLight light;
-					return light;
-				}
-				case 1:
-				{
-					Thermostat thermo;
-					return thermo;
-				}
-				case 2:
-				{
+				UniversalMenu menu(menuItems);
+				menu.setTitle("Каталог смарт устройств\nВыберите тип устройства:");
+				menu.enableExitOption(false);
 
-					SecurityCamera camera;
-					return camera;
-				}
-				default:
-				{
-					cout << "Вы ввели неверный выбор, попробуйте еще раз." << std::endl;
-					break;
-				}
-				}
+				int choice = menu.run();
 
+				if (choice == -1) {
+					cout << "Вы ввели неверный выбор, попробуйте еще раз." << endl;
+					UniversalMenu::pause();
+					continue;
+				}
+				else if (choice >= 0 && choice < actions.size()) {
+					return actions[choice]();
+				}
+				else {
+					cout << "Вы ввели неверный выбор, попробуйте еще раз." << endl;
+					UniversalMenu::pause();
+				}
 			}
 		}
 
@@ -2508,25 +2847,6 @@
 			default:
 				throw runtime_error("Неверный тип устройства");
 			}
-		}
-
-		void SmartHomeInteraction::showSHOHeaderMenu()
-		{
-			cout << "Меню SmartHome:" << endl
-				<< "-->  1. Добавление устройства на аккаунт." << endl
-				<< "-->  2. Редактирование устройства." << endl
-				<< "-->  3. Удаление устройства." << endl
-				<< "-->  4. Посмотреть информацию о смарт-устройствах." << endl
-				<< "-->  5. Сортировка устройств (по названию)." << endl
-				<< "-->  6. Поиск устройств (по названию)." << endl
-				<< "-->  7. Создание отчета." << endl
-				<< "-->  8. Фильтрация устройств (online)." << endl
-				<< "-->  9. Фильтрация устройств (по дате)." << endl
-				<< "--> 10. Создание сценария." << endl
-				<< "--> 11. Удаление сценария." << endl
-				<< "--> 12. Редактирование сценария." << endl
-				<< "--> 13. Посмотреть информацию о всех сценариях." << endl
-				<< "-->  0. Выход..." << endl << ">> ";
 		}
 
 		void SmartHomeInteraction::generateFullReport()
@@ -2603,41 +2923,32 @@
 
 		void SmartHomeInteraction::showSmartHomeMenu()
 		{
-			bool is_running = true;
-			short choice;
-			while (is_running)
-			{
-				showSHOHeaderMenu();
-				while (is_running) {
-					cin >> choice;
-					if (cin.fail()) {
-						cin.clear();
-						cin.ignore((numeric_limits<streamsize>::max)(), '\n');
-						cout << "Ошибка ввода! Введите число: ";
-					}
-					else {
-						cin.ignore((numeric_limits<streamsize>::max)(), '\n');
-						break;
-					}
-				}
-				switch (choice)
-				{
-				case 0:
-				{
-					is_running = false;
-					cout << "\n\n";
-					break;
-				}
-				case 1:
-				{
+			vector<string> menuItems = {
+				"1. Добавление устройства на аккаунт.",
+				"2. Редактирование устройства.",
+				"3. Удаление устройства.",
+				"4. Посмотреть информацию о смарт-устройствах.",
+				"5. Сортировка устройств (по названию).",
+				"6. Поиск устройств (по названию).",
+				"7. Создание отчета.",
+				"8. Фильтрация устройств (online).",
+				"9. Фильтрация устройств (по дате).",
+				"10. Создание сценария.",
+				"11. Удаление сценария.",
+				"12. Редактирование сценария.",
+				"13. Посмотреть информацию о всех сценариях."
+			};
+
+			vector<function<void()>> actions = {
+				[]() {
 					if (admin_action) {
 						cout << "На аккаунте другого пользователя, вы можете только редактировать, удалять и создать отчет." << endl;
-						break;
+						UniversalMenu::pause();
+						return;
 					}
 					auto device = chooseDevice();
 					cin >> device;
 					string user_password = current_user->getPassword();
-
 					std::visit([user_password](auto&& dev) {
 						dev.setPassword(user_password);
 						}, device);
@@ -2645,14 +2956,13 @@
 						cout << "Данное устройство уже существует на вашем аккаунте." << endl;
 					else
 						device_file.writeF(device);
-					break;
-				}
-				case 2:
-				{
-
+					UniversalMenu::pause();
+				},
+				[]() {
 					int count = device_file.readF();
 					if (!count) {
-						break;
+						UniversalMenu::pause();
+						return;
 					}
 					cout << "Выбор устройства для редактирования (1-" << count << ")." << endl;
 					auto old_device = device_file.chooseCertainDevice(count);
@@ -2672,7 +2982,8 @@
 					if (device_file.checkDevice(new_device))
 					{
 						cout << "Данное устройство уже существует на вашем аккаунте." << endl;
-						break;
+						UniversalMenu::pause();
+						return;
 					}
 					device_file.editF(old_device, new_device);
 
@@ -2686,12 +2997,8 @@
 							DeviceScriptVariant script = script_subsequence.front();
 							script_subsequence.pop();
 
-
 							bool updated = std::visit([&old_device, &new_device](auto& script_obj) -> bool {
-
 								auto device_in_script = script_obj.getDevice();
-
-
 								if (device_in_script == old_device)
 								{
 									using ScriptDeviceType = std::decay_t<decltype(device_in_script)>;
@@ -2710,17 +3017,16 @@
 
 						if (scripts_updated)
 							cout << "Сценарии обновлены с новым устройством.\n";
-						
 					}
-
-					break;
-				}
-				case 3:
-				{
+					UniversalMenu::pause();
+				},
+				[]() {
 					int count = device_file.readF();
 					int choice;
-					if (!count)
-						break;
+					if (!count) {
+						UniversalMenu::pause();
+						return;
+					}
 					cout << "Введите свой выбор: " << endl;
 					while (true) {
 						cin >> choice;
@@ -2736,19 +3042,17 @@
 					}
 					auto device = device_file.removeF(choice);
 					if (!script_subsequence.empty()) removeScript(device);
-					break;
-				}
-				case 4:
-				{
-
+					UniversalMenu::pause();
+				},
+				[]() {
 					device_file.readF();
-					break;
-				}
-				case 5:
-				{
+					UniversalMenu::pause();
+				},
+				[]() {
 					if (admin_action) {
 						cout << "На аккаунте другого пользователя, вы можете только редактировать, удалять и создать отчет." << endl;
-						break;
+						UniversalMenu::pause();
+						return;
 					}
 					device_file.sortF([](const DeviceVariant& a, const DeviceVariant& b) -> bool {
 						return std::visit([](const auto& dev_a, const auto& dev_b) -> bool {
@@ -2759,34 +3063,34 @@
 							return title_a < title_b;
 							}, a, b);
 						});
-					break;
-				}
-				case 6:
-				{
+					UniversalMenu::pause();
+				},
+				[]() {
 					if (admin_action) {
 						cout << "На аккаунте другого пользователя, вы можете только редактировать, удалять и создать отчет." << endl;
-						break;
+						UniversalMenu::pause();
+						return;
 					}
 					string target_dev_name;
 					cout << "Введите название устройства: ";
-					getline(cin, target_dev_name);
+						getline(cin, target_dev_name);
+						trimString(target_dev_name);
 					device_file.searchF(target_dev_name);
-					break;
-				}
-				case 7:
-				{
+					UniversalMenu::pause();
+				},
+				[]() {
 					generateFullReport();
-					break;
-				}
-				case 8:
-				{
+					UniversalMenu::pause();
+				},
+				[]() {
 					if (admin_action) {
 						cout << "На аккаунте другого пользователя, вы можете только редактировать, удалять и создать отчет." << endl;
-						break;
+						UniversalMenu::pause();
+						return;
 					}
 					bool isOnline;
 					cout << "Устройство онлайн? (0-Нет, 1-Да): ";
-					
+
 					while (true) {
 						cin >> isOnline;
 						if (cin.fail()) {
@@ -2808,23 +3112,24 @@
 						},
 						"Статус: " + std::string(isOnline ? "онлайн" : "офлайн")
 					);
-					break;
-				}
-				case 9:
-				{
+					UniversalMenu::pause();
+				},
+				[]() {
 					if (admin_action) {
 						cout << "На аккаунте другого пользователя, вы можете только редактировать, удалять и создать отчет." << endl;
-						break;
+						UniversalMenu::pause();
+						return;
 					}
 					Date first_date, second_date;
-					cout << "Введите первую дату:" << endl;
+					cout << "Введите первую дату" << endl;
 					cin >> first_date;
-					cout << "Введите вторую дату:" << endl;
+					cout << "Введите вторую дату" << endl;
 					cin >> second_date;
 					if (second_date < first_date || second_date == first_date)
 					{
 						cout << "Вторая дата не может быть раньше или равна первой." << endl;
-						break;
+						UniversalMenu::pause();
+						return;
 					}
 					device_file.filter(
 						[first_date, second_date](const DeviceVariant& device) -> bool {
@@ -2841,13 +3146,13 @@
 						std::to_string(second_date.getMonth()) + "-" +
 						std::to_string(second_date.getDay())
 					);
-					break;
-				}
-				case 10:
-				{
+					UniversalMenu::pause();
+				},
+				[]() {
 					if (admin_action) {
 						cout << "На аккаунте другого пользователя, вы можете только редактировать, удалять и создать отчет." << endl;
-						break;
+						UniversalMenu::pause();
+						return;
 					}
 					int count = device_file.readF();
 					if (!count)
@@ -2858,8 +3163,19 @@
 
 						cout << "Введите описание сценария: ";
 						string script_desc;
-						getline(cin, script_desc);
-
+						while (true) {
+							getline(cin, script_desc);
+							trimString(script_desc);
+							if (script_desc.empty()) {
+								cout << "Ошибка: описание не может быть пустым! Введите описание: ";
+							}
+							else if (script_desc.length() < 5) {
+								cout << "Ошибка: описание слишком короткое (минимум 5 символов)! Введите описание: ";
+							}
+							else {
+								break;
+							}
+						}
 
 						cout << "Введите длительность сценария (в минутах): ";
 						short duration;
@@ -2877,615 +3193,511 @@
 						}
 
 						DeviceScriptVariant dev_script = std::visit([&script_desc, &duration](const auto& concrete_device) -> DeviceScriptVariant {
-							return DeviceScript<std::decay_t<decltype(concrete_device)>>(concrete_device,script_desc,duration);
+							return DeviceScript<std::decay_t<decltype(concrete_device)>>(concrete_device, script_desc, duration);
 							}, device_variant);
-
 
 						SmartHomeInteraction::script_subsequence.push(dev_script);
 						cout << "Сценарий успешно добавлен!\n";
 					}
-
-					break;
-				}
-				case 11:
-				{
+					UniversalMenu::pause();
+				},
+				[]() {
 					if (script_subsequence.empty()) cout << "На вашем аккаунте нет сценариев." << endl;
-					else 
+					else
 					{
 						int count = device_file.readF();
 						auto device_variant = device_file.chooseCertainDevice(count);
 						removeScript(device_variant);
 					}
-					break;
-				}
-				case 12:
-				{
+					UniversalMenu::pause();
+				},
+				[]() {
 					editScript();
-					break;
-				}
-				case 13:
-				{
+					UniversalMenu::pause();
+				},
+				[]() {
 					printScripts();
-					break;
+					UniversalMenu::pause();
 				}
-				default:
-				{
-					cout << "Вы ввели неверный выбор. Попробуйте еще раз." << endl;
-					break;
-				}
-				}
-			}
+			};
+
+			UniversalMenu menu(menuItems, actions);
+			menu.setTitle("Меню SmartHome");
+			menu.enableLoop(true);
+			menu.execute();
 		}
 
 		bool SmartHomeInteraction::showAccountMenu()
 		{
-			bool is_running = true;
-			int choice;
-			while (is_running)
-			{
-				cout << "Меню учетной записи:" << endl
-					<< "--> 1.Информация об аккаунте." << endl
-					<< "--> 2.Удалить учетную запись." << endl
-					<< "--> 0.Выход..." << endl << ">> ";
+			vector<string> menuItems = {
+				"1. Информация об аккаунте.",
+				"2. Удалить учетную запись.",
+			};
 
-				while (is_running) {
-					cin >> choice;
-					if (cin.fail()) {
-						cin.clear();
-						cin.ignore((numeric_limits<streamsize>::max)(), '\n');
-						cout << "Ошибка ввода! Введите число: ";
-					}
-					else {
-						cin.ignore((numeric_limits<streamsize>::max)(), '\n');
-						break;
-					}
-				}
-				switch (choice) {
-				case 1:
-				{
+			vector<function<void()>> actions = {
+				[]() {
 					cout << *current_user << endl;
 					string temp_password;
 					cout << "Для просмотра пароля, введите пароль: ";
 					getline(cin, temp_password);
-					string hashed_temp_password = hashPassword(current_user->getUserName(),temp_password);
+					string hashed_temp_password = hashPassword(current_user->getUserName(), temp_password);
 					if (hashed_temp_password == current_user->getPassword())
 						cout << "Пароль: " << temp_password << endl;
 					else
 						cout << "Пароль не совпадает." << endl;
-					break;
-				}
-				case 2:
-				{
+					UniversalMenu::pause();
+				},
+				[]() -> void {
 					if (!admin_action)
 					{
 						string temp_password;
-						cout << "Для удаления учетной записи, введите пароль: ";
-						getline(cin, temp_password);
+						cout << "Для удаления учетной записи, введите пароль:";
+						while (true) {
+							getline(cin, temp_password);
+							trimString(temp_password);
+							if (temp_password.empty()) {
+								cout << "Ошибка: пароль не может быть пустым! Введите пароль: ";
+							}
+							else if (temp_password.length() < 4) {
+								cout << "Ошибка: пароль слишком короткий (минимум 4 символа)! Введите пароль: ";
+							}
+							else {
+								break;
+							}
+						}
 						string hashed_temp_password = hashPassword(current_user->getUserName(), temp_password);
 						if (hashed_temp_password != current_user->getPassword())
 						{
 							cout << "Пароль учетной записи и введенный пароли не совпадают." << endl;
-							break;
-
+							UniversalMenu::pause();
+							return;
 						}
 					}
-						if (std::filesystem::remove(device_file.getFileName()))
-						{
-							std::cout << "Файл " << device_file.getFileName() << " успешно удален\n";
-						}
-						else
-						{
-							std::cout << "Файл " << device_file.getFileName() << " не найден или не может быть удален\n";
-						}
 
-						user_file.removeF(*current_user);
-						return true;
+					if (std::filesystem::remove(device_file.getFileName()))
+					{
+						std::cout << "Файл " << device_file.getFileName() << " успешно удален\n";
+					}
+					else
+					{
+						std::cout << "Файл " << device_file.getFileName() << " не найден или не может быть удален\n";
+					}
 
-					break;
+					user_file.removeF(*current_user);
+					throw true; 
 				}
-				case 0:
-				{
-					is_running = false;
-					break;
-				}
-				default:
-				{
-					cout << "Неверное значение выбора, попробуйте ещё раз." << endl;
-					break;
-				}
-				}
+			};
 
+			try {
+				UniversalMenu menu(menuItems, actions);
+				menu.setTitle("Меню учетной записи");
+				menu.enableLoop(true);
+				menu.execute();
 			}
-			return 0;
+			catch (bool result) {
+				return result;
+			}
+
+			return false;
 		}
 
 		void SmartHomeInteraction::showAdminOperationsMenu()
 		{
-			bool is_running = true;
-			int choice;
-			while (is_running)
-			{
-				cout << "Меню админских операций:" << endl
-					<< "--> 1.Информация всех зарегистрированных аккаунтов." << endl
-					<< "--> 2.Войти в качестве User." << endl
-					<< "--> 0.Выход..." << endl << ">> ";
+			vector<string> menuItems = {
+				"1. Информация всех зарегистрированных аккаунтов.",
+				"2. Войти в качестве определенного пользователя.",
+			};
 
-				while (is_running) {
-					cin >> choice;
-					if (cin.fail()) {
-						cin.clear();
-						cin.ignore((numeric_limits<streamsize>::max)(), '\n');
-						cout << "Ошибка ввода! Введите число: ";
-					}
-					else {
-						cin.ignore((numeric_limits<streamsize>::max)(), '\n');
-						break;
-					}
-				}
-				switch (choice) {
-				case 1:
-				{
+			vector<function<void()>> actions = {
+				[]() {
 					user_file.readF_a();
-					break;
-				}
-				case 2:
-				{
+					UniversalMenu::pause();
+				},
+				[]() {
 					string name;
 					cout << "Введите имя аккаунта: ";
-					getline(cin, name);
+					while (true) {
+						getline(cin, name);
+						trimString(name);
+						if (name.empty()) {
+							cout << "Ошибка: имя не может быть пустым! Введите имя аккаунта: ";
+						}
+						else if (name.length() < 3) {
+							cout << "Ошибка: имя слишком короткое (минимум 3 символа)! Введите имя аккаунта: ";
+						}
+						else {
+							break;
+						}
+					}
 					User temp_user = user_file.chooseUser_a(name);
-					if (temp_user == User()) break;
+					if (temp_user == User()) {
+						UniversalMenu::pause();
+						return;
+					}
 					*current_user = temp_user;
 					admin_action = true;
 					showMainMenu();
 					admin_action = false;
-					break;
 				}
-				case 0:
-				{
-					is_running = false;
-					break;
-				}
-				default:
-				{
-					cout << "Неверное значение выбора, попробуйте ещё раз." << endl;
-					break;
-				}
-				}
+			};
 
-			}
+			UniversalMenu menu(menuItems, actions);
+			menu.setTitle("Меню админских операций");
+			menu.enableLoop(true);
+			menu.execute();
+
 		}
 
 		void SmartHomeInteraction::showRegistrationMenu()
 		{
-
 			if (user_file.checkUser(*current_user) == 1)
 			{
 				cout << "Данная учетная запись уже существует, вход совершается автоматически." << endl;
+
 			}
 			else if (user_file.checkUser(*current_user) == 0)
 			{
 				user_file.writeF(*current_user);
 				cout << "Пользователь зарегистрирован. Добро пожаловать в систему Smart Home!" << endl;
 			}
-			else 
+			else
 			{
 				cout << "Пользователь уже существует с таким же именем." << std::endl;
+				UniversalMenu::pause("Нажмите любую клавишу для продолжения...");
 				return;
 			}
-			
+
 			if (current_user->getRole() == Admin_)
 			{
+				UniversalMenu::pause("Нажмите любую клавишу для продолжения...");
 				User admin = *current_user;
-				short choice;
-				bool is_running = true;
-				while (is_running)
-				{
-					*current_user = admin;
-					cout << "Дальнейшие действия:" << endl
-						<< "1.Админские операции." << endl
-						<< "2.Главное меню." << endl
-						<< "0.Выход." << endl
-						<< "Выберите соответсвующее действие: ";
-					while (true) {
-						cin >> choice;
-						if (cin.fail()) {
-							cin.clear();
-							cin.ignore((numeric_limits<streamsize>::max)(), '\n');
-							cout << "Ошибка ввода! Введите число: ";
-						}
-						else {
-							cin.ignore((numeric_limits<streamsize>::max)(), '\n');
-							break;
-						}
-					}
-					switch (choice)
-					{
-					case 1:
-					{
+
+				vector<string> menuItems = {
+					"1. Админские операции.",
+					"2. Главное меню."
+				};
+
+				vector<function<void()>> actions = {
+					[&admin]() {
+						*current_user = admin;
 						showAdminOperationsMenu();
-						break;
-					}
-					case 2:
-					{
+					},
+					[&admin]() {
+						*current_user = admin;
 						showMainMenu();
-						break;
 					}
-					case 0:
-					{
-						is_running = false;
-						break;
-					}
-					}
-				}
+				};
+
+				*current_user = admin;
+
+				UniversalMenu menu(menuItems, actions);
+				menu.setTitle("Дальнейшие действия");
+				menu.enableLoop(false);
+				menu.enableExitOption(false);
+				menu.execute(); 
 			}
 			else
-			showMainMenu();
+			{
+				showMainMenu();
+			}
 		}
 
 		void SmartHomeInteraction::showLoginMenu()
 		{
+			if (user_file.checkUser(*current_user) == 1) {
+				cout << "Вход выполнен успешно! Добро пожаловать!" << endl;
+			}
+			else if (user_file.checkUser(*current_user) == 0)
+			{
+				cout << "Пользователь не найден. Проверьте логин и пароль." << endl;
+				UniversalMenu::pause("Нажмите любую клавишу для продолжения...");
+				return;
+			}
 
-				if (user_file.checkUser(*current_user) == 1) {
-					cout << "Вход выполнен успешно! Добро пожаловать!" << endl;
-				}
-				else if(user_file.checkUser(*current_user) == 0)
-				{
-					cout << "Пользователь не найден. Проверьте логин и пароль." << endl;
-					return;
-				}
+			if (current_user->getRole() == Admin_)
+			{
+				UniversalMenu::pause("Нажмите любую клавишу для продолжения...");
+				User admin = *current_user;
 
-				if (current_user->getRole() == Admin_)
-				{
-					User admin = *current_user;
-					short choice;
-					bool is_running = true;
-					while (is_running)
-					{
+				vector<string> menuItems = {
+					"1. Админские операции.",
+					"2. Главное меню.",
+				};
+
+				vector<function<void()>> actions = {
+					[&admin]() { 
 						*current_user = admin;
-						cout << "Дальнейшие действия:" << endl
-							<< "1.Админские операции." << endl
-							<< "2.Главное меню." << endl
-							<< "0.Выход." << endl
-							<< "Выберите соответсвующее действие: ";
-						while (true) {
-							cin >> choice;
-							if (cin.fail()) {
-								cin.clear();
-								cin.ignore((numeric_limits<streamsize>::max)(), '\n');
-								cout << "Ошибка ввода! Введите число: ";
-							}
-							else {
-								cin.ignore((numeric_limits<streamsize>::max)(), '\n');
-								break;
-							}
-						}
-						switch (choice)
-						{
-						case 1:
-						{
-							showAdminOperationsMenu();
-							break;
-						}
-						case 2:
-						{
-							showMainMenu();
-							break;
-						}
-						case 0:
-						{
-							is_running = false;
-							break;
-						}
-						}
+						showAdminOperationsMenu();
+					},
+					[&admin]() {
+						*current_user = admin;
+						showMainMenu();
 					}
-				}
-				else
-					showMainMenu();
-		}
+				};
 
-		void SmartHomeInteraction::showRoleHeaderMenu()
-		{
-			cout << "Меню выбора роли:" << endl
-				<< "--> 1.User." << endl
-				<< "--> 2.Admin." << endl
-				<< "--> 3.Guest." << endl
-				<< "--> 0.Выход..." << endl
-				<< "Выберите соответствующую роль" << std::endl << ">> ";
-		}
-
-		void SmartHomeInteraction::showUserMenu()
-		{
-			showAuthorMenu();
+				*current_user = admin; 
+				UniversalMenu menu(menuItems, actions);
+				menu.setTitle("Дальнейшие действия");
+				menu.enableLoop(true); 
+				menu.execute(); 
+			}
+			else
+			{
+				showMainMenu();
+			}
 		}
 
 		void SmartHomeInteraction::showAdminMenu()
 		{
-			 std::ifstream file("for_admins.txt", std::ios::in);
+			std::ifstream file("for_admins.txt", std::ios::in);
 			if (!file.is_open()) {
 				std::cout << "Ошибка открытия файла с паролем";
+				UniversalMenu::pause();
 				return;
-			}  
-			//std::string admin_password;
-			//file >> admin_password;
+			}
+
 			std::string admin_password;
 			std::getline(file, admin_password);
 			std::string current_password;
-			while (true) {
-				cout << "Введите админский пароль: " << std::endl << ">>";
-				cin >> current_password;
+
+			int attempts = 3;
+			while (attempts > 0) {
+				cout << "Введите админский пароль (" << attempts << " попыток осталось)\n ";
+				current_password = getPasswordWithDots();
+				current_password = hashPassword("admin",current_password);
+
 				if (admin_password == current_password) {
 					std::cout << "Пароль подтверждён. Продолжаем.\n";
-					break;
-				}
-				else 
-				{
-					cout << "Вы ввели неверный пароль..." << std::endl;
+					cin.ignore((numeric_limits<streamsize>::max)(), '\n');
+					UniversalMenu::pause();
+					showAuthorMenu();
 					return;
 				}
+				else
+				{
+					attempts--;
+					if (attempts > 0) {
+						cout << "Вы ввели неверный пароль. Попробуйте еще раз.\n";
+					}
+					else {
+						cout << "Попытки исчерпаны. Возврат в главное меню.\n";
+						UniversalMenu::pause();
+						return;
+					}
+				}
 			}
-
-			showAuthorMenu();
 		}
 
 		void SmartHomeInteraction::showGuestMenu()
 		{
-			bool is_running = true;
-			short choice;
-			while (is_running)
-			{
-				cout << "Гостевое Меню" << endl
-					<< "1. Регистрация" << endl
-					<< "2. Просмотр перечня смарт-устройств" << endl
-					<< "0. Выход..." << endl << ">>";
-				while (is_running) {
-					cin >> choice;
-					if (cin.fail()) {
-						cin.clear();
-						cin.ignore((numeric_limits<streamsize>::max)(), '\n');
-						cout << "Ошибка ввода! Введите число: ";
-					}
-					else {
-						cin.ignore((numeric_limits<streamsize>::max)(), '\n');
-						break;
-					}
-				}
-				switch (choice) {
-				case 0:
-				{
-					is_running = false;
-					cout << "\n\n";
-					break;
-				}
-				case 1:
-				{
+			vector<string> menuItems = {
+				"1. Регистрация",
+				"2. Просмотр перечня смарт-устройств",
+			};
+
+			vector<function<void()>> actions = {
+				[]() {
 					showAuthorMenu();
 					auto user = make_shared<User>();
 					user->setRole(Guest_);
 					current_user = user;
-					break;
-				}
-				case 2:
-				{
+				},
+				[]() {
 					showDeviceCatalogHeaderMenu();
-					break;
+					UniversalMenu::pause();
 				}
-				
-				default:
-				{
-					cout << "Был введен неверный выбор. Попробуйте снова." << std::endl;
-					break;
-				}
-				}
-			}
+			};
+
+			UniversalMenu menu(menuItems, actions);
+			menu.setTitle("Гостевое Меню");
+			menu.enableLoop(true);
+			menu.execute();
 		}
 
 		void SmartHomeInteraction::showMainMenu()
 		{
-			bool is_running = true;
-			short choice;
 			device_file.setFileName(current_user->getUserName());
 			script_subsequence = script_file.unloadScripts(*current_user);
+			UniversalMenu::pause("Нажмите любую клавишу для продолжения...");
 			cout << "\n";
-			while (is_running)
-			{
 
-				cout << "Главное меню:" << endl
-					<< "--> 1.Умный дом." << endl
-					<< "--> 2.Учётная запись." << endl
-					<< "--> 0.Выход..." << endl << ">> ";
-				while (is_running) {
-					cin >> choice;
-					if (cin.fail()) {
-						cin.clear();
-						cin.ignore((numeric_limits<streamsize>::max)(), '\n');
-						cout << "Ошибка ввода! Введите число: ";
-					}
-					else {
-						cin.ignore((numeric_limits<streamsize>::max)(), '\n');
-						break;
-					}
-				}
-				switch (choice)
-				{
-				case 0:
-				{
-					cout << "Автоматическая запись последовательности девайсов в файл." << endl;
-					script_file.writeF(script_subsequence);
-					is_running = false;
-					cout << "\n\n";
-					break;
-				}
-				case 1:
-				{
+			vector<string> menuItems = {
+				"1. Умный дом.",
+				"2. Учётная запись."
+			};
+
+			vector<function<void()>> actions = {
+				[]() {
 					showSmartHomeMenu();
-					break;
+				},
+				[]() {
+					if (showAccountMenu()) {
+						throw true;
+					}
 				}
-				case 2:
-				{
-					if (showAccountMenu())
-						return;
-					break;
-				}
-				default:
-				{
-					cout << "Вы ввели неверный выбор." << endl;
-					break;
-				}
-				}
-			
+			};
+
+			try {
+				UniversalMenu menu(menuItems, actions);
+				menu.setTitle("Главное меню");
+				menu.enableLoop(true);  
+				menu.execute();
 			}
+			catch (bool exitFlag) {
+				if (exitFlag) {
+					return;
+				}
+			}
+
+			cout << "Автоматическая запись последовательности девайсов в файл..." << endl;
+			script_file.writeF(script_subsequence);
+			UniversalMenu::pause("Нажмите любую клавишу для продолжения...");
 		}
 
 		void SmartHomeInteraction::showAuthorMenu()
 		{
-			bool is_running = true;
-			short choice;
 			UserRole temp_role = current_user->getRole();
-			while (is_running)
-			{
-				cout << "Меню учетной записи:" << endl
-					<< "--> 1. Создать учётную запись." << endl
-					<< ((current_user->getRole() != Guest_) ? "--> 2. Войти в учётную запись.\n" : "")
-					<< "--> 0.Выход..." << endl << ">> ";
+			vector<string> menuItems;
 
-				while (true) {
-					cin >> choice;
-					if (cin.fail()) {
-						cin.clear();
-						cin.ignore((numeric_limits<streamsize>::max)(), '\n');
-						cout << "Ошибка ввода! Введите число: ";
-					}
-					else {
-						cin.ignore((numeric_limits<streamsize>::max)(), '\n');
-						break;
-					}
-				}
+			if (current_user->getRole() != Guest_) {
+				menuItems = {
+					"1. Создать учётную запись.",
+					"2. Войти в учётную запись.",
+				};
+			}
+			else {
+				menuItems = {
+					"1. Создать учётную запись.",
+				};
+			}
 
-				switch (choice)
-				{
-				case 0:
-				{
-					is_running = false;
-					current_user = nullptr;
-					cout << "\n\n";
-					break;
-				}
-				case 1:
-				{
-					if (current_user->getRole() == Guest_)
-						current_user->setRole(User_);
+			vector<function<void()>> actions;
 
-					cin >> *current_user;
-					showRegistrationMenu();
-					auto user = make_shared<User>();
-					user->setRole(temp_role);
-					current_user = user;
-					break;
-				}
-				case 2:
-				{
-					//cout << *current_user << endl;
-					if (current_user->getRole() == Guest_){}
-					else {
+			if (current_user->getRole() != Guest_) {
+				actions = {
+					[temp_role]() {
+						if (current_user->getRole() == Guest_)
+							current_user->setRole(User_);
+
+						cin >> *current_user;
+						showRegistrationMenu();
+						auto user = make_shared<User>();
+						user->setRole(temp_role);
+						current_user = user;
+					},
+					[temp_role]() {
 						string attempt_name;
 						string attempt_password;
 						cout << "Введите имя пользователя: ";
-						getline(cin, attempt_name);
+						while (true) {
+							getline(cin, attempt_name);
+							trimString(attempt_name);
+							if (attempt_name.empty()) {
+								cout << "Ошибка: имя не может быть пустым! Введите имя пользователя: ";
+							}
+							else if (attempt_name.length() < 3) {
+								cout << "Ошибка: имя слишком короткое (минимум 3 символа)! Введите имя пользователя: ";
+							}
+							else {
+								break;
+							}
+						}
 
-						attempt_password = getPasswordWithDots();
-						
+						while (true) {
+							attempt_password = getPasswordWithDots();
+							trimString(attempt_password);
+
+							if (attempt_password.length() == 0) {
+								cout << "Ошибка: пароль не может быть пустым!";
+							}
+							else if (attempt_password.length() < 4) {
+								cout << "Ошибка: пароль слишком короткий (минимум 4 символов)!";
+							}
+							else if (attempt_password.length() > 50) {
+								cout << "Ошибка: пароль слишком длинный!";
+							}
+							else {
+								break;
+							}
+						}
+
 						current_user->setUserName(attempt_name);
-						attempt_password = hashPassword(current_user->getUserName(),attempt_password);
+						attempt_password = hashPassword(current_user->getUserName(), attempt_password);
 						current_user->setPassword(attempt_password);
 
 						showLoginMenu();
 						auto user = make_shared<User>();
 						user->setRole(temp_role);
 						current_user = user;
-						break;
-					}
-				}
-				default:
-				{
-					cout << "Вы ввели неверный выбор." << endl;
-					break;
-				}
-				}
+					},
+				};
 			}
+			else {
+				actions = {
+					[temp_role]() {
+						if (current_user->getRole() == Guest_)
+							current_user->setRole(User_);
+
+						cin >> *current_user;
+						showRegistrationMenu();
+						auto user = make_shared<User>();
+						user->setRole(temp_role);
+						current_user = user;
+					}
+				};
+			}
+
+			UniversalMenu menu(menuItems, actions);
+			menu.setTitle("Меню авторизации записи");
+			menu.enableLoop(true);
+			menu.execute();
 		}
 
 		void SmartHomeInteraction::showDeviceCatalogHeaderMenu()
 		{
 			cout << "Каталог смарт устройств" << endl
-				<< "0. Smart Light" << endl
-				<< "1. Thermostat" << endl
-				<< "2. Security Camera" << endl;
+				<< "1. Умная лампа" << endl
+				<< "2. Термостат" << endl
+				<< "3. Умная камера" << endl;
 		}
 
 		void SmartHomeInteraction::showEntryMenu()
 		{
-			bool is_running = true;
-			short choice;
-			while (is_running)
-			{
-				showRoleHeaderMenu();
+			vector<string> menuItems = {
+				"1. Пользователь.",
+				"2. Администратор.",
+				"3. Гость.",
+			};
 
-				while (is_running) {
-					cin >> choice;
-					if (cin.fail()) {
-						cin.clear();
-						cin.ignore((numeric_limits<streamsize>::max)(), '\n');
-						cout << "Ошибка ввода! Введите число: ";
-					}
-					else {
-						cin.ignore((numeric_limits<streamsize>::max)(), '\n');
-						break;
-					}
-				}
-				switch (choice)
-				{
-				case 0:
-				{
-					is_running = false;
-					break;
-				}
-				case 1:
-				{
+			vector<function<void()>> actions = {
+				[]() {
 					auto user = make_shared<User>();
 					user->setRole(User_);
 					current_user = user;
-					showUserMenu();
+					showAuthorMenu();
 					current_user = nullptr;
-					break;
-				}
-				case 2:
-				{
+				},
+				[]() {
 					auto user = make_shared<User>();
 					user->setRole(Admin_);
 					current_user = user;
 					showAdminMenu();
 					current_user = nullptr;
-					break;
-				}
-				case 3:
-				{
+				},
+				[]() {
 					auto user = make_shared<User>();
 					user->setRole(Guest_);
 					current_user = user;
 					showGuestMenu();
 					current_user = nullptr;
-					break;
-				}
-				default:
-				{
-					cout << "Вы выбрали несуществующий пункт меню." << endl;
-					break;
-				}
-				}
-			}
+				},
+			};
+
+			UniversalMenu menu(menuItems, actions);
+			menu.setTitle("Меню выбора роли");
+			menu.enableLoop(true);
+			menu.execute();
 		}
-		
 }
 
 	
